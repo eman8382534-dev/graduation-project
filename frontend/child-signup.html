@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Growia - New Hero</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* ── Override body to match garden gradient ── */
+    body {
+      margin: 0;
+      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      overflow-x: hidden;
+    }
+
+    /* Animations */
+    @keyframes float  { 0%, 100% { transform: translateY(0);    } 50% { transform: translateY(-12px); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+    .page {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 20px 110px;
+    }
+
+    /* ── Decorative elements ── */
+    .cloud-s { position: absolute; background: white; border-radius: 50px; opacity: 0.85; }
+    .cs1 { width: 90px; height: 34px; top: 70px; left: 60px; }
+    .cs1::before { content: ''; position: absolute; width: 44px; height: 44px; background: white; border-radius: 50%; top: -16px; left: 12px; }
+    .butterfly { position: absolute; font-size: 22px; animation: float 4s ease-in-out infinite; }
+    .bt1 { top: 200px; left: 80px; }
+    .bt2 { top: 280px; right: 100px; animation-delay: -2s; }
+    .ladybug { position: absolute; font-size: 18px; top: 360px; left: 50px; }
+
+    .sun-wrap {
+      position: absolute;
+      top: 16px; right: 16px;
+      width: 110px; height: 110px;
+      background: radial-gradient(circle, #ffe066, #f5c842);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 52px;
+      box-shadow: 0 0 25px rgba(245,200,66,0.4);
+      animation: float 4s ease-in-out infinite;
+      z-index: 5;
+    }
+
+    /* ── Progress dots ── */
+    .progress-dots {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 24px;
+      position: relative;
+      z-index: 10;
+    }
+    .dot {
+      width: 36px; height: 12px;
+      border-radius: var(--radius-full);
+      background: rgba(255,255,255,0.5);
+      transition: all 0.3s;
+    }
+    .dot.active { background: var(--teal); width: 48px; }
+    .dot.done   { background: #27ae60; }
+
+    /* ── Card ── */
+    .signup-card {
+      background: rgba(255,255,255,0.92);
+      border-radius: var(--radius-xl);
+      padding: 40px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+      position: relative;
+      z-index: 10;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .step-icon  { font-size: 48px; margin-bottom: 12px; display: block; }
+    .step-title { font-family: var(--font-display); font-size: 28px; color: var(--teal); margin-bottom: 6px; }
+    .step-sub   { font-size: 16px; color: var(--teal-light); margin-bottom: 28px; font-weight: 600; }
+
+    .form-group { text-align: left; margin-bottom: 18px; }
+    .form-label { display: block; font-weight: 600; color: var(--text-dark); margin-bottom: 6px; font-size: 14px; }
+    .form-input {
+      width: 100%; padding: 14px 16px;
+      border: 2px solid #e2e8f0; border-radius: var(--radius-full);
+      font-family: var(--font-main); font-size: 16px;
+      transition: all 0.2s; background: white;
+    }
+    .form-input:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px rgba(58,125,140,0.1); }
+    .form-input.is-invalid { border-color: var(--red-alert) !important; }
+
+    .error-msg { color: var(--red-alert); font-size: 0.85rem; display: block; margin-top: 5px; text-align: left; font-weight: bold; min-height: 18px; }
+
+    /* ── Global error banner (network/server errors) ── */
+    #globalErrorBanner {
+      display: none;
+      background: linear-gradient(135deg, #fff0f0, #ffe0e0);
+      border: 1.5px solid #f5a0a0;
+      border-radius: var(--radius-md);
+      color: #c0392b;
+      font-size: 13.5px;
+      font-weight: 700;
+      padding: 11px 14px 11px 38px;
+      margin-bottom: 18px;
+      text-align: left;
+      position: relative;
+    }
+    #globalErrorBanner::before { content: '⚠️'; position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 15px; }
+
+    /* ── Avatar grid ── */
+    .avatar-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .avatar-opt {
+      width: 70px; height: 70px;
+      border-radius: 50%;
+      background: #f0f7fa;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px;
+      cursor: pointer;
+      border: 3px solid transparent;
+      transition: all 0.2s;
+      margin: 0 auto;
+    }
+    .avatar-opt:hover    { border-color: var(--teal-light); transform: scale(1.08); }
+    .avatar-opt.selected { border-color: var(--teal); background: #e0f0f8; box-shadow: 0 0 0 4px rgba(58,125,140,0.2); }
+
+    /* ── Traits ── */
+    .traits-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+    .trait-opt {
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      background: #f0f7fa;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .trait-opt:hover    { border-color: var(--teal-light); }
+    .trait-opt.selected { border-color: var(--teal); background: #e0f0f8; }
+    .trait-opt .trait-icon { font-size: 18px; margin-bottom: 4px; }
+
+    /* ── Password strength ── */
+    .pass-strength { height: 4px; border-radius: 2px; margin-top: 6px; transition: all 0.3s; }
+    .pass-hint     { font-size: 12px; color: var(--text-light); margin-top: 4px; }
+
+    /* ── Nav buttons ── */
+    .nav-row { display: flex; gap: 12px; margin-top: 8px; }
+
+    .btn-next {
+      flex: 1; padding: 14px;
+      background: var(--yellow); color: var(--text-dark);
+      border: none; border-radius: var(--radius-full);
+      font-family: var(--font-main); font-weight: 800; font-size: 16px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-next:hover:not(:disabled) { background: var(--yellow-dark); transform: scale(1.02); }
+    .btn-next:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-back-small {
+      padding: 14px 20px;
+      background: #f0f0f0; border: none;
+      border-radius: var(--radius-full);
+      font-family: var(--font-main); font-weight: 700; font-size: 15px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-back-small:hover { background: #e0e0e0; }
+
+    /* ── Step visibility ── */
+    .step        { display: none; }
+    .step.active { display: block; }
+
+    /* ── Success state ── */
+    .success-anim { font-size: 64px; animation: bounce 1s ease infinite; margin-bottom: 16px; display: block; }
+
+    /* ── Ground ── */
+    .ground-bottom { position: absolute; bottom: 0; left: 0; right: 0; }
+    .fence-b {
+      height: 50px;
+      background: repeating-linear-gradient(90deg, white 0px, white 18px, transparent 18px, transparent 26px);
+      border-top: 6px solid white;
+      position: absolute; bottom: 36px; left: 0; right: 0;
+    }
+    .grass-b { height: 40px; background: linear-gradient(to bottom, #7ec850, #5ca830); position: absolute; bottom: 0; left: 0; right: 0; }
+    .flowers-b { position: absolute; bottom: 38px; left: 0; right: 0; }
+    .fl { position: absolute; font-size: 26px; }
+
+    .back-heroes {
+      display: block; text-align: center; margin-top: 20px;
+      font-size: 14px; color: var(--teal); text-decoration: none;
+      font-weight: 600; position: relative; z-index: 10;
+    }
+    .back-heroes:hover { text-decoration: underline; }
+
+    /* Loading spinner */
+    @keyframes btnSpin { to { transform: rotate(360deg); } }
+    .btn-spinner {
+      display: inline-block; width: 16px; height: 16px;
+      border: 2.5px solid rgba(44,62,80,0.25); border-top-color: var(--text-dark);
+      border-radius: 50%; animation: btnSpin 0.7s linear infinite;
+      vertical-align: middle; margin-right: 6px;
+    }
+
+    @media (max-width: 480px) {
+      .signup-card { padding: 32px 24px; margin: 0 12px; }
+      .avatar-opt  { width: 60px; height: 60px; font-size: 24px; }
+      .progress-dots { gap: 8px; margin-bottom: 16px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Decorative garden elements -->
+  <div class="cloud-s cs1"></div>
+  <div class="butterfly bt1">🦋</div>
+  <div class="butterfly bt2">🦋</div>
+  <div class="ladybug">🐞</div>
+  <div class="sun-wrap">☀️</div>
+
+  <!-- Progress indicator -->
+  <div class="progress-dots" id="progressDots">
+    <div class="dot active" id="d0"></div>
+    <div class="dot" id="d1"></div>
+    <div class="dot" id="d2"></div>
+    <div class="dot" id="d3"></div>
+    <div class="dot" id="d4"></div>
+    <div class="dot" id="d5"></div>
+  </div>
+
+  <div class="signup-card">
+
+    <!-- Global network/server error banner -->
+    <div id="globalErrorBanner" role="alert" aria-live="assertive"></div>
+
+    <!-- ── STEP 0: Name & Age ── -->
+    <div class="step active" id="step-0">
+      <span class="step-icon">⭐</span>
+      <h2 class="step-title">Let's start your adventure.</h2>
+      <p class="step-sub">Enter your name and age</p>
+
+      <div class="form-group">
+        <label class="form-label" for="childName">Your awesome name</label>
+        <input type="text" class="form-input" id="childName" placeholder="What's your name?" maxlength="30" autocomplete="name">
+        <span class="error-msg" id="error-FullName"></span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="childAge">How old are you?</label>
+        <input type="number" class="form-input" id="childAge" placeholder="Your age" min="5" max="18">
+        <span class="error-msg" id="error-Age"></span>
+      </div>
+
+      <div class="nav-row">
+        <button class="btn-next" onclick="validateStep1()">Next →</button>
+      </div>
+    </div>
+
+    <!-- ── STEP 1: Avatar ── -->
+    <div class="step" id="step-1">
+      <span class="step-icon">🎨</span>
+      <h2 class="step-title">Pick your avatar!</h2>
+      <p class="step-sub">Who do you want to be?</p>
+      <div class="avatar-grid">
+        <div class="avatar-opt" onclick="selectAvatar(this)">🦁</div>
+        <div class="avatar-opt" onclick="selectAvatar(this)">🦋</div>
+        <div class="avatar-opt" onclick="selectAvatar(this)">🌸</div>
+        <div class="avatar-opt" onclick="selectAvatar(this)">🐯</div>
+        <div class="avatar-opt" onclick="selectAvatar(this)">🦊</div>
+        <div class="avatar-opt" onclick="selectAvatar(this)">🐸</div>
+        <div class="avatar-opt" onclick="selectAvatar(this)">🦄</div>
+        <div class="avatar-opt" onclick="selectAvatar(this)">🐼</div>
+      </div>
+      <div class="nav-row">
+        <button class="btn-back-small" onclick="goStep(0)">← Back</button>
+        <button class="btn-next" id="nextStep2" onclick="goStep(2)" disabled>Next →</button>
+      </div>
+    </div>
+
+    <!-- ── STEP 2: Traits ── -->
+    <div class="step" id="step-2">
+      <span class="step-icon">💫</span>
+      <h2 class="step-title">What describes you?</h2>
+      <p class="step-sub" id="traitsCount">Pick your 3 strongest traits! (0/3)</p>
+      <div class="traits-grid">
+        <div class="trait-opt" onclick="selectTrait(this)"><div class="trait-icon">🔍</div>Curiosity</div>
+        <div class="trait-opt" onclick="selectTrait(this)"><div class="trait-icon">💪</div>Persistence</div>
+        <div class="trait-opt" onclick="selectTrait(this)"><div class="trait-icon">💖</div>Kindness</div>
+        <div class="trait-opt" onclick="selectTrait(this)"><div class="trait-icon">🕌</div>Spiritual</div>
+        <div class="trait-opt" onclick="selectTrait(this)"><div class="trait-icon">⚡</div>Vitality</div>
+        <div class="trait-opt" onclick="selectTrait(this)"><div class="trait-icon">🛡️</div>Resilience</div>
+      </div>
+      <div class="nav-row">
+        <button class="btn-back-small" onclick="goStep(1)">← Back</button>
+        <button class="btn-next" id="nextStep3" onclick="goStep(3)" disabled>Next →</button>
+      </div>
+    </div>
+
+    <!-- ── STEP 3: Username & Parent Email ── -->
+    <div class="step" id="step-3">
+      <span class="step-icon">🏷️</span>
+      <h2 class="step-title">Create your identity!</h2>
+      <p class="step-sub">How will you be known in Growia?</p>
+
+      <div class="form-group">
+        <label class="form-label" for="childUsername">Choose a Hero Name (Username)</label>
+        <input type="text" class="form-input" id="childUsername" placeholder="e.g. SuperSami2026"
+               autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="20">
+        <span class="error-msg" id="error-Username"></span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="parentEmailInput">Parent's Email (Recommended)</label>
+        <input type="email" class="form-input" id="parentEmailInput" placeholder="Enter your parent's email" autocomplete="email">
+        <span class="error-msg" id="error-ParentEmail"></span>
+        <small style="color:var(--text-light);font-size:11px;">If you don't have it, just click Next!</small>
+      </div>
+
+      <div class="nav-row">
+        <button class="btn-back-small" onclick="goStep(2)">← Back</button>
+        <button class="btn-next" onclick="handleEmailStep()">Next →</button>
+      </div>
+    </div>
+
+    <!-- ── STEP 3-5: Child's own email (shown only when no parent email given) ── -->
+    <div class="step" id="step-3-5">
+      <span class="step-icon">📧</span>
+      <h2 class="step-title">One more thing!</h2>
+      <p class="step-sub">Since you didn't add a parent's email, we need yours!</p>
+
+      <div class="form-group">
+        <label class="form-label" for="childPersonalEmail">Your Personal Email</label>
+        <input type="email" class="form-input" id="childPersonalEmail" placeholder="Enter your own email" autocomplete="email">
+        <span class="error-msg" id="error-ChildPersonalEmail"></span>
+      </div>
+
+      <div class="nav-row">
+        <button class="btn-back-small" onclick="goStep(3)">← Back</button>
+        <button class="btn-next" onclick="validateChildEmail()">Next →</button>
+      </div>
+    </div>
+
+    <!-- ── STEP 4: Password ── -->
+    <div class="step" id="step-4">
+      <span class="step-icon">🔐</span>
+      <h2 class="step-title">Create your secret password!</h2>
+      <p class="step-sub">Only you should know this</p>
+
+      <div class="form-group">
+        <label class="form-label" for="childPass">Password</label>
+        <input type="password" class="form-input" id="childPass" placeholder="Create a password..."
+               oninput="checkStrength()" autocomplete="new-password">
+        <div class="pass-strength" id="passStrength"></div>
+        <span class="error-msg" id="error-Password"></span>
+        <div class="pass-hint" id="passHint">Use at least 6 characters</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="childPassConfirm">Confirm Password</label>
+        <input type="password" class="form-input" id="childPassConfirm" placeholder="Type it again..."
+               autocomplete="new-password">
+        <span class="error-msg" id="error-ConfirmPassword"></span>
+      </div>
+
+      <div class="nav-row">
+        <button class="btn-back-small" onclick="handleBackFromPassword()">← Back</button>
+        <button class="btn-next" id="createBtn" onclick="createHero()">Create Hero! 🌱</button>
+      </div>
+    </div>
+
+    <!-- ── STEP 5: Success ── -->
+    <div class="step" id="step-5">
+      <span class="success-anim">🌱</span>
+      <h2 class="step-title" style="color:var(--green-dark);">Welcome to the Garden!</h2>
+      <p style="color:var(--text-mid);margin-bottom:24px;font-size:15px;line-height:1.6;">
+        Your hero account is ready! Time to start your adventure and grow your superpowers!
+      </p>
+      <a href="leafy.html" class="btn-next"
+         style="display:flex;justify-content:center;align-items:center;width:100%;font-size:16px;text-decoration:none;">
+        Start My Journey 🌟
+      </a>
+    </div>
+
+  </div>
+
+  <a href="hero-hub.html" class="back-heroes">← Back to Heroes</a>
+
+  <div class="ground-bottom">
+    <div class="fence-b"></div>
+    <div class="grass-b"></div>
+    <div class="flowers-b">
+      <span class="fl" style="left:80px;">🌸</span>
+      <span class="fl" style="left:280px;">🌻</span>
+      <span class="fl" style="right:200px;">🌼</span>
+      <span class="fl" style="right:80px;">🌷</span>
+    </div>
+  </div>
+
+</div>
+
+<script src="script.js"></script>
+<script>
+  'use strict';
+
+  // Auto-fill parentEmail from URL param (when parent initiates signup from dashboard)
+  (function prefillParentEmail() {
+    const params = new URLSearchParams(window.location.search);
+    const email  = params.get('parentEmail');
+    if (email) {
+      const el = document.getElementById('parentEmailInput');
+      if (el) el.value = decodeURIComponent(email);
+    }
+  })();
+
+  /* ══════════════════════════════════════════════════════════
+     STATE
+  ══════════════════════════════════════════════════════════ */
+  let currentStep    = 0;
+  let selectedTraits = [];
+  let selectedAvatar = '';
+
+  /* ══════════════════════════════════════════════════════════
+     1. NAVIGATION
+  ══════════════════════════════════════════════════════════ */
+  function goStep(n) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    currentStep = n;
+    const target = document.getElementById('step-' + n);
+    if (target) target.classList.add('active');
+    updateDots();
+    hideGlobalError();
+  }
+
+  function showSpecificStep(stepId) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    const target = document.getElementById(stepId);
+    if (target) target.classList.add('active');
+    if (stepId === 'step-3-5') { currentStep = 3; updateDots(); }
+    hideGlobalError();
+  }
+
+  function updateDots() {
+    for (let i = 0; i < 6; i++) {
+      const dot = document.getElementById('d' + i);
+      if (!dot) continue;
+      dot.classList.remove('active', 'done');
+      if      (i < currentStep)  dot.classList.add('done');
+      else if (i === currentStep) dot.classList.add('active');
+    }
+  }
+
+  function handleBackFromPassword() {
+    const parentEmail = document.getElementById('parentEmailInput').value.trim();
+    if (parentEmail === '') {
+      showSpecificStep('step-3-5');
+    } else {
+      goStep(3);
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     2. VALIDATION HELPERS
+  ══════════════════════════════════════════════════════════ */
+  function clearFieldError(id) {
+    const el = document.getElementById('error-' + id);
+    if (el) el.textContent = '';
+    const input = document.getElementById(id.charAt(0).toLowerCase() + id.slice(1))
+               || document.getElementById('child' + id);
+    if (input) input.classList.remove('is-invalid');
+  }
+
+  function setFieldError(fieldId, errorId, message) {
+    const errEl = document.getElementById('error-' + errorId);
+    if (errEl) errEl.textContent = message;
+    const inputEl = document.getElementById(fieldId);
+    if (inputEl) inputEl.classList.add('is-invalid');
+  }
+
+  function validateStep1() {
+    const name     = document.getElementById('childName').value.trim();
+    const ageInput = document.getElementById('childAge').value;
+    const age      = parseInt(ageInput) || 0;
+
+    document.getElementById('error-FullName').textContent = '';
+    document.getElementById('error-Age').textContent      = '';
+    document.getElementById('childName').classList.remove('is-invalid');
+    document.getElementById('childAge').classList.remove('is-invalid');
+
+    let valid = true;
+    if (!name || name.length < 3 || name.length > 30) {
+      setFieldError('childName', 'FullName', 'Name must be between 3–30 characters');
+      valid = false;
+    }
+    if (!ageInput || age < 5 || age > 18) {
+      setFieldError('childAge', 'Age', 'Age must be between 5 and 18');
+      valid = false;
+    }
+    if (valid) goStep(1);
+  }
+
+  function selectAvatar(el) {
+    document.querySelectorAll('.avatar-opt').forEach(a => a.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedAvatar = el.textContent.trim();
+    document.getElementById('nextStep2').disabled = false;
+  }
+
+  function selectTrait(el) {
+    const traitName = el.textContent.trim();
+    if (el.classList.contains('selected')) {
+      el.classList.remove('selected');
+      selectedTraits = selectedTraits.filter(t => t !== traitName);
+    } else if (selectedTraits.length < 3) {
+      el.classList.add('selected');
+      selectedTraits.push(traitName);
+    }
+    document.getElementById('traitsCount').textContent =
+      `Pick your 3 strongest traits! (${selectedTraits.length}/3)`;
+    document.getElementById('nextStep3').disabled = selectedTraits.length < 3;
+  }
+
+  function handleEmailStep() {
+    const parentEmail = document.getElementById('parentEmailInput').value.trim();
+    const username    = document.getElementById('childUsername').value.trim();
+    const usernameRegex = /^[a-zA-Z0-9_]+$/;
+
+    document.getElementById('error-Username').textContent   = '';
+    document.getElementById('error-ParentEmail').textContent = '';
+    document.getElementById('childUsername').classList.remove('is-invalid');
+    document.getElementById('parentEmailInput').classList.remove('is-invalid');
+
+    let valid = true;
+    if (!username || !usernameRegex.test(username)) {
+      setFieldError('childUsername', 'Username', 'Use letters, numbers, and underscores only');
+      valid = false;
+    }
+    if (parentEmail !== '' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(parentEmail)) {
+      setFieldError('parentEmailInput', 'ParentEmail', 'Parent email format is invalid');
+      valid = false;
+    }
+    if (!valid) return;
+
+    if (parentEmail === '') {
+      showSpecificStep('step-3-5');
+    } else {
+      goStep(4);
+    }
+  }
+
+  function validateChildEmail() {
+    const childEmail = document.getElementById('childPersonalEmail').value.trim();
+    document.getElementById('error-ChildPersonalEmail').textContent = '';
+    document.getElementById('childPersonalEmail').classList.remove('is-invalid');
+
+    if (!childEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(childEmail)) {
+      setFieldError('childPersonalEmail', 'ChildPersonalEmail', 'Invalid email format');
+      return;
+    }
+    goStep(4);
+  }
+
+  function checkStrength() {
+    const pass = document.getElementById('childPass').value;
+    const bar  = document.getElementById('passStrength');
+    const hint = document.getElementById('passHint');
+
+    if (pass.length === 0) {
+      bar.style.width           = '0';
+      bar.style.backgroundColor = '';
+      hint.textContent          = 'Use at least 6 characters';
+    } else if (pass.length >= 6) {
+      bar.style.width           = '100%';
+      bar.style.backgroundColor = '#27ae60';
+      hint.textContent          = 'Strong enough ✅';
+    } else {
+      bar.style.width           = (pass.length * 16.6) + '%';
+      bar.style.backgroundColor = '#f1c40f';
+      hint.textContent          = 'Too short (min 6 chars)';
+    }
+  }
+
+  function validatePasswordStep() {
+    const pass        = document.getElementById('childPass').value;
+    const confirmPass = document.getElementById('childPassConfirm').value;
+
+    document.getElementById('error-Password').textContent      = '';
+    document.getElementById('error-ConfirmPassword').textContent = '';
+    document.getElementById('childPass').classList.remove('is-invalid');
+    document.getElementById('childPassConfirm').classList.remove('is-invalid');
+
+    if (pass.length < 6) {
+      setFieldError('childPass', 'Password', 'Password must be at least 6 characters');
+      return false;
+    }
+    if (pass !== confirmPass) {
+      setFieldError('childPassConfirm', 'ConfirmPassword', 'Passwords do not match');
+      return false;
+    }
+    return true;
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     3. GLOBAL ERROR BANNER HELPERS
+  ══════════════════════════════════════════════════════════ */
+  function showGlobalError(message) {
+    const el = document.getElementById('globalErrorBanner');
+    el.textContent   = message;
+    el.style.display = 'block';
+  }
+
+  function hideGlobalError() {
+    const el = document.getElementById('globalErrorBanner');
+    if (el) el.style.display = 'none';
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     4. API CALL — createHero()
+     POST /Auth/signup-child
+     Uses shared API_BASE_URL and getOrCreateDeviceId() from script.js.
+     No local redefinition of shared helpers.
+  ══════════════════════════════════════════════════════════ */
+  async function createHero() {
+    if (!validatePasswordStep()) return;
+
+    hideGlobalError();
+    // Clear all field-level error spans before a fresh attempt
+    document.querySelectorAll('[id^="error-"]').forEach(el => { el.textContent = ''; });
+
+    const btn = document.getElementById('createBtn');
+    btn.disabled  = true;
+    btn.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span>Creating…';
+
+    const payload = {
+      FullName:           document.getElementById('childName').value.trim(),
+      Age:                parseInt(document.getElementById('childAge').value) || 0,
+      Username:           document.getElementById('childUsername').value.trim(),
+      ChildPersonalEmail: document.getElementById('childPersonalEmail').value.trim() || null,
+      ParentEmail:        document.getElementById('parentEmailInput').value.trim()  || null,
+      Password:           document.getElementById('childPass').value,
+      ConfirmPassword:    document.getElementById('childPassConfirm').value,
+      CharacterType:      selectedAvatar || 'Hero',
+      CharacterName:      selectedAvatar || 'Hero',
+      Hobbies:            selectedTraits.length > 0 ? [...selectedTraits] : []
+    };
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/Auth/signup-child`, {
+        method:  'POST',
+        headers: {
+          'Content-Type':         'application/json',
+          'X-Device-Fingerprint': getOrCreateDeviceId()
+        },
+        body: JSON.stringify(payload)
+      });
+
+      let result;
+      try {
+        result = await response.json();
+      } catch {
+        throw new Error('Unexpected server response. Please try again.');
+      }
+
+      if (response.ok) {
+        // Check whether this signup was triggered from the parent dashboard
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('mode') === 'parent') {
+          // Parent-initiated flow: DO NOT overwrite the parent's token
+          window.location.href = 'parent-dashboard.html';
+        } else {
+          // Child self-signup: store the returned child token and enter the garden
+          if (result.token) {
+            setChildToken(result.token);
+          }
+          // Show success step before redirect so the child feels the celebration
+          goStep(5);
+        }
+
+      } else {
+        // ── Handle structured validation errors from the backend ──
+
+        // 1. Identity errors array (e.g. duplicate username from ASP.NET Identity)
+        if (Array.isArray(result)) {
+          result.forEach(err => {
+            if (err.code && err.code.toLowerCase().includes('password')) {
+              document.getElementById('error-Password').textContent = err.description;
+              document.getElementById('childPass').classList.add('is-invalid');
+            }
+          });
+        }
+
+        // 2. Simple message (e.g. "Username already taken")
+        if (result.message) {
+          const userErrorEl = document.getElementById('error-Username');
+          if (userErrorEl) {
+            userErrorEl.textContent = result.message;
+            document.getElementById('childUsername').classList.add('is-invalid');
+            goStep(3);
+          } else {
+            showGlobalError(result.message);
+          }
+        }
+
+        // 3. ModelState errors dict (e.g. result.errors.Username[0])
+        if (result.errors) {
+          for (const key in result.errors) {
+            const errorMsg  = result.errors[key][0];
+            const errorSpan = document.getElementById(`error-${key}`);
+            if (errorSpan) {
+              errorSpan.textContent = errorMsg;
+              // Navigate to the step that owns this field
+              if (key === 'Username' || key === 'ParentEmail') { goStep(3); }
+              if (key === 'FullName' || key === 'Age')         { goStep(0); }
+              if (key === 'Password' || key === 'ConfirmPassword') { goStep(4); }
+            }
+          }
+        }
+
+        // 4. Generic fallback if none of the above matched
+        const hasFieldErrors =
+          (Array.isArray(result) && result.length > 0) ||
+          result.message ||
+          (result.errors && Object.keys(result.errors).length > 0);
+        if (!hasFieldErrors) {
+          showGlobalError(`Something went wrong (error ${response.status}). Please try again.`);
+        }
+      }
+
+    } catch (err) {
+      // Network failure or JSON parse error — never silent, never alert()
+      const isParseErr = err?.message?.includes('Unexpected server');
+      showGlobalError(
+        isParseErr
+          ? err.message
+          : 'Could not reach the server. Check your connection and try again. 🌐'
+      );
+    } finally {
+      btn.disabled  = false;
+      btn.textContent = 'Create Hero! 🌱';
+    }
+  }
+</script>
+</body>
+</html>

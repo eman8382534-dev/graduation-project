@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Growia - Settings</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="leafy.css">
+    <style>
+        /* ── Page base ── */
+        body {
+            margin: 0;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            min-height: 100vh;
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        .settings-wrap {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px 16px 100px;
+        }
+
+        /* ── Page header ── */
+        .page-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 10px;
+        }
+        .page-header h1 {
+            color: #FF8A8A;
+            margin: 0;
+            font-size: 1.8rem;
+        }
+        .page-sub {
+            color: #4A6D6D;
+            margin-bottom: 28px;
+            font-size: 0.95rem;
+        }
+
+        /* ── Section card ── */
+        .settings-card {
+            background: rgba(255,255,255,0.93);
+            border-radius: 24px;
+            padding: 28px 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+        }
+        .settings-card h4 {
+            color: #FF8A8A;
+            margin: 0 0 20px 0;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        /* ── Avatar preview (top of avatar card) ── */
+        .avatar-preview {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #a8edea, #fed6e3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            margin: 0 auto 20px;
+            border: 4px solid #FF8A8A;
+            transition: transform 0.2s;
+        }
+        .avatar-preview.bounce {
+            animation: avatarBounce 0.4s ease;
+        }
+        @keyframes avatarBounce {
+            0%, 100% { transform: scale(1); }
+            50%       { transform: scale(1.15); }
+        }
+
+        /* ── Avatar grid (identical to Sign Up) ── */
+        .avatar-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        .avatar-opt {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            background: #f0f7fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.2s;
+            margin: 0 auto;
+            user-select: none;
+        }
+        .avatar-opt:hover    { border-color: #71b7c8; transform: scale(1.08); }
+        .avatar-opt.selected {
+            border-color: #3a7d8c;
+            background: #dff0f7;
+            box-shadow: 0 0 0 4px rgba(58,125,140,0.2);
+        }
+
+        /* ── Form inputs ── */
+        .input-group { margin-bottom: 16px; }
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 700;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .settings-input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            border: 2px solid #e2e8f0;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+            background: white;
+        }
+        .settings-input:focus {
+            outline: none;
+            border-color: #3a7d8c;
+        }
+
+        /* ── Character buddy section ── */
+        .buddy-row {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+        .buddy-icon {
+            background: #E8F5E9;
+            padding: 14px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .buddy-icon img { display: block; width: 46px; }
+        .buddy-fields { flex: 1; min-width: 200px; }
+        .buddy-fields p { font-size: 0.8rem; color: #999; margin: 0 0 10px 0; }
+
+        /* ── Save button ── */
+        .save-btn {
+            display: block;
+            width: 100%;
+            max-width: 300px;
+            margin: 32px auto 0;
+            padding: 16px;
+            background: #FFD97D;
+            border: none;
+            border-radius: 30px;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .save-btn:hover:not(:disabled) {
+            background: #f5c842;
+            transform: scale(1.03);
+        }
+        .save-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: #27ae60;
+            color: white;
+            padding: 14px 28px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 1rem;
+            opacity: 0;
+            transition: all 0.35s ease;
+            z-index: 9999;
+            white-space: nowrap;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .toast.error { background: #e74c3c; }
+
+        /* ── Spinner ── */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .btn-spinner {
+            display: inline-block;
+            width: 16px; height: 16px;
+            border: 2.5px solid rgba(0,0,0,0.2);
+            border-top-color: #333;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+
+        /* ── Back button ── */
+        .back-btn {
+            display: inline-block;
+            background: #FFD97D;
+            padding: 10px 20px;
+            border-radius: 20px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 700;
+            margin-bottom: 24px;
+            font-size: 0.95rem;
+        }
+        .back-btn:hover { background: #f5c842; }
+
+        @media (max-width: 440px) {
+            .avatar-opt { width: 58px; height: 58px; font-size: 22px; }
+            .settings-card { padding: 20px 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="settings-wrap">
+
+    <a href="leafy.html" class="back-btn">← Back to Hub</a>
+
+    <div class="page-header">
+        <span style="font-size:2.2rem;">⚙️</span>
+        <h1>Update Your Hero Profile</h1>
+    </div>
+    <p class="page-sub">Make your garden truly yours!</p>
+
+    <!-- ── Avatar Card ── -->
+    <div class="settings-card">
+        <h4>🎨 Your Avatar</h4>
+
+        <!-- Live preview of the currently selected avatar -->
+        <div class="avatar-preview" id="avatarPreview">🌱</div>
+
+        <!-- Same 8 avatars as in Sign Up — identical emoji set and layout -->
+        <div class="avatar-grid" id="avatarGrid">
+            <div class="avatar-opt" data-avatar="🦁" onclick="selectAvatar(this)">🦁</div>
+            <div class="avatar-opt" data-avatar="🦋" onclick="selectAvatar(this)">🦋</div>
+            <div class="avatar-opt" data-avatar="🌸" onclick="selectAvatar(this)">🌸</div>
+            <div class="avatar-opt" data-avatar="🐯" onclick="selectAvatar(this)">🐯</div>
+            <div class="avatar-opt" data-avatar="🦊" onclick="selectAvatar(this)">🦊</div>
+            <div class="avatar-opt" data-avatar="🐸" onclick="selectAvatar(this)">🐸</div>
+            <div class="avatar-opt" data-avatar="🦄" onclick="selectAvatar(this)">🦄</div>
+            <div class="avatar-opt" data-avatar="🐼" onclick="selectAvatar(this)">🐼</div>
+        </div>
+    </div>
+
+    <!-- ── Basic Info Card ── -->
+    <div class="settings-card">
+        <h4>👤 Basic Info</h4>
+        <div class="input-group">
+            <label for="settingName">Your Name</label>
+            <input type="text" id="settingName" class="settings-input" placeholder="Your awesome name" maxlength="30">
+        </div>
+        <div class="input-group">
+            <label for="settingAge">Your Age</label>
+            <input type="number" id="settingAge" class="settings-input" placeholder="Your age" min="5" max="18">
+        </div>
+    </div>
+
+   
+    <!-- Save button -->
+    <button class="save-btn" id="saveBtn" onclick="saveSettings()">Save Changes 💾</button>
+
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+<script src="script.js"></script>
+<script>
+'use strict';
+
+/* ══════════════════════════════════════════════════════════
+   STATE
+   selectedAvatar tracks what the user has chosen in the grid.
+   It is set either from the API (current value) or from clicking.
+══════════════════════════════════════════════════════════ */
+let selectedAvatar = '';
+
+/* ══════════════════════════════════════════════════════════
+   AUTH GUARD
+══════════════════════════════════════════════════════════ */
+if (!getChildToken()) {
+    window.location.href = 'child_login.html';
+}
+
+/* ══════════════════════════════════════════════════════════
+   AVATAR SELECTION  (identical logic to child-signup.html)
+   - Removes .selected from all options
+   - Adds .selected to the clicked one
+   - Updates the live preview and the state variable
+   - Triggers a short bounce animation on the preview
+══════════════════════════════════════════════════════════ */
+function selectAvatar(el) {
+    // Deselect all
+    document.querySelectorAll('#avatarGrid .avatar-opt').forEach(a => a.classList.remove('selected'));
+    // Select clicked
+    el.classList.add('selected');
+    selectedAvatar = el.dataset.avatar;
+
+    // Update live preview
+    const preview = document.getElementById('avatarPreview');
+    preview.textContent = selectedAvatar;
+    // Bounce animation
+    preview.classList.remove('bounce');
+    void preview.offsetWidth; // force reflow to restart animation
+    preview.classList.add('bounce');
+}
+
+/* ══════════════════════════════════════════════════════════
+   PRE-SELECT avatar in the grid based on a value loaded from API
+══════════════════════════════════════════════════════════ */
+function preSelectAvatar(emoji) {
+    if (!emoji) return;
+    const grid = document.getElementById('avatarGrid');
+    const match = grid.querySelector(`.avatar-opt[data-avatar="${emoji}"]`);
+    if (match) {
+        match.classList.add('selected');
+    }
+    // Always update preview — even if emoji is not in the grid (custom / legacy value)
+    document.getElementById('avatarPreview').textContent = emoji;
+    selectedAvatar = emoji;
+}
+
+/* ══════════════════════════════════════════════════════════
+   TOAST HELPER
+══════════════════════════════════════════════════════════ */
+function showToast(message, isError = false) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className   = 'toast' + (isError ? ' error' : '');
+    // Trigger show
+    requestAnimationFrame(() => toast.classList.add('show'));
+    setTimeout(() => { toast.classList.remove('show'); }, 3000);
+}
+
+/* ══════════════════════════════════════════════════════════
+   LOAD CURRENT PROFILE FROM API
+   Populates name, age, characterName, and pre-selects avatar.
+══════════════════════════════════════════════════════════ */
+(async function loadProfile() {
+    try {
+        const res = await childAuthFetch('/Children/profile');
+        if (!res || !res.ok) return;
+        const profile = await res.json();
+
+        const nameInput = document.getElementById('settingName');
+        const ageInput  = document.getElementById('settingAge');
+        const charInput = document.getElementById('settingCharacterName');
+
+        if (nameInput) nameInput.value = profile.fullName      || '';
+        if (ageInput)  ageInput.value  = profile.age           || '';
+        if (charInput) charInput.value = profile.characterName || '';
+
+        // FIX: Pre-select the current avatar from the grid.
+        // profile.characterType holds the emoji (e.g. "🦁") saved at sign-up or last edit.
+        if (profile.characterType) {
+            preSelectAvatar(profile.characterType);
+        }
+    } catch (e) {
+        // Silent fail — page still usable with empty fields
+        console.error('Failed to load profile:', e);
+    }
+})();
+
+/* ══════════════════════════════════════════════════════════
+   SAVE SETTINGS
+   Sends fullName, age, characterName, AND characterType to
+   PATCH /api/Children/profile so the avatar is persisted.
+══════════════════════════════════════════════════════════ */
+async function saveSettings() {
+    if (!getChildToken()) { window.location.href = 'child_login.html'; return; }
+
+    const fullName      = document.getElementById('settingName')?.value?.trim();
+    const ageRaw        = document.getElementById('settingAge')?.value;
+    const age           = ageRaw ? parseInt(ageRaw, 10) : null;
+    const characterName = document.getElementById('settingCharacterName')?.value?.trim();
+
+    // Basic validation
+    if (!fullName) {
+        showToast('Please enter your name! 👋', true);
+        return;
+    }
+
+    // Build payload — characterType is the selected avatar emoji
+    const payload = { fullName };
+    if (age && age >= 5 && age <= 18)  payload.age           = age;
+    if (characterName)                  payload.characterName = characterName;
+    if (selectedAvatar)                 payload.characterType = selectedAvatar;
+
+    // Show loading state
+    const btn = document.getElementById('saveBtn');
+    btn.disabled  = true;
+    btn.innerHTML = '<span class="btn-spinner"></span>Saving…';
+
+    try {
+        const res = await childAuthFetch('/Children/profile', {
+            method: 'PATCH',
+            body:   JSON.stringify(payload)
+        });
+        if (!res) return; // 401/403 handled by childAuthFetch
+
+        if (res.ok) {
+            showToast('Changes Saved! 💾 ✅');
+        } else {
+            let errMsg = 'Could not save changes.';
+            try {
+                const body = await res.json();
+                if (body?.message) errMsg = body.message;
+            } catch {}
+            showToast(errMsg, true);
+        }
+    } catch (e) {
+        showToast('Connection error! 🌐', true);
+    } finally {
+        btn.disabled  = false;
+        btn.innerHTML = 'Save Changes 💾';
+    }
+}
+</script>
+
+</body>
+</html>

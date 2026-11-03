@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Growia - Child Login</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); }
+
+    .page {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 20px; position: relative; overflow: hidden;
+    }
+
+    .login-card {
+      background: rgba(255,255,255,0.93); border-radius: var(--radius-xl);
+      padding: 40px; width: 100%; max-width: 440px;
+      box-shadow: var(--shadow-lg); text-align: center;
+      position: relative; z-index: 10; animation: fadeIn 0.4s ease;
+    }
+    .leafy-small { font-size: 52px; margin-bottom: 12px; animation: float 3s ease-in-out infinite; display: block; }
+    .login-title { font-family: var(--font-display); font-size: 28px; color: var(--teal); margin-bottom: 6px; }
+    .login-sub   { font-size: 14px; color: var(--text-light); margin-bottom: 28px; }
+
+    .form-group  { text-align: left; }
+    .form-label  { color: var(--text-dark); }
+
+    /* Reset notice */
+    .reset-notice {
+      background: linear-gradient(135deg, #fff9e6, #fff3cd);
+      border: 2px solid var(--yellow); border-radius: var(--radius-md);
+      padding: 16px; margin-bottom: 20px; text-align: left; display: none;
+    }
+    .reset-notice.show { display: block; }
+    .reset-notice h4   { font-size: 14px; font-weight: 800; color: #856404; margin-bottom: 6px; }
+    .reset-notice p    { font-size: 13px; color: #856404; }
+
+    .new-pass-group       { display: none; }
+    .new-pass-group.show  { display: block; }
+
+    .btn-login {
+      width: 100%; padding: 14px; background: var(--yellow);
+      border: none; border-radius: var(--radius-full);
+      font-family: var(--font-main); font-weight: 800; font-size: 16px;
+      cursor: pointer; transition: all 0.2s; color: var(--text-dark);
+    }
+    .btn-login:hover:not(:disabled) { background: var(--yellow-dark); transform: scale(1.02); }
+    .btn-login:disabled             { opacity: 0.7; cursor: not-allowed; }
+
+    /* Ground */
+    .ground-bottom { position: absolute; bottom: 0; left: 0; right: 0; }
+    .fence-b { height: 50px; background: repeating-linear-gradient(90deg,white 0px,white 18px,transparent 18px,transparent 26px); border-top: 6px solid white; position: absolute; bottom: 36px; left: 0; right: 0; }
+    .grass-b { height: 40px; background: linear-gradient(to bottom,#7ec850,#5ca830); position: absolute; bottom: 0; left: 0; right: 0; }
+    .fl      { position: absolute; font-size: 26px; bottom: 38px; }
+
+    /* Loading spinner inside the button */
+    @keyframes btnSpin { to { transform: rotate(360deg); } }
+    .btn-spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2.5px solid rgba(44,62,80,0.25);
+      border-top-color: var(--text-dark);
+      border-radius: 50%;
+      animation: btnSpin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="cloud-shape" style="width:90px;height:34px;top:70px;left:60px;"><span style="display:block;position:absolute;width:44px;height:44px;background:white;border-radius:50%;top:-16px;left:12px;"></span></div>
+  <div class="cloud-shape" style="width:110px;height:38px;top:55px;left:330px;"><span style="display:block;position:absolute;width:52px;height:52px;background:white;border-radius:50%;top:-20px;left:16px;"></span></div>
+  <div class="butterfly" style="top:200px;left:80px;">🦋</div>
+  <div class="butterfly" style="top:280px;right:100px;animation-delay:-2s;">🦋</div>
+  <div class="ladybug"   style="top:360px;left:50px;">🐞</div>
+  <div class="sun-wrap">☀️</div>
+
+  <div class="login-card">
+    <span class="leafy-small">🌱</span>
+    <h2 class="login-title">Welcome back, Hero!</h2>
+    <p class="login-sub">Ready to continue your adventure?</p>
+
+    <div class="reset-notice" id="resetNotice">
+      <h4>Time to set a new password</h4>
+      <p>Your parent helped reset your password. Please create a new one below!</p>
+    </div>
+
+    <!-- DOM-based error banner — zero blocking alerts -->
+    <div id="errorMessage" class="error-banner" role="alert" aria-live="assertive" aria-atomic="true"></div>
+
+    <form id="loginForm" novalidate>
+      <div class="form-group">
+        <label class="form-label" for="username">Your username</label>
+        <input type="text" class="form-input" id="username" placeholder="Enter your username"
+               autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="80">
+      </div>
+
+      <div class="form-group" id="normalPassGroup">
+        <label class="form-label" for="password">Your password</label>
+        <input type="password" class="form-input" id="password" placeholder="Enter your password"
+               autocomplete="current-password" maxlength="128">
+        <span class="forgot-link" onclick="openModal('forgotModal')">Forgot your password?</span>
+      </div>
+
+      <div class="new-pass-group" id="newPassGroup">
+        <div class="form-group">
+          <label class="form-label" for="newPass">New Password</label>
+          <input type="password" class="form-input" id="newPass" placeholder="Create a new password" autocomplete="new-password">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="newPassConfirm">Confirm New Password</label>
+          <input type="password" class="form-input" id="newPassConfirm" placeholder="Type it again" autocomplete="new-password">
+        </div>
+      </div>
+
+      <button class="btn-login" type="submit" id="loginBtn">Enter the Garden</button>
+    </form>
+  </div>
+
+  <a href="hero-hub.html" class="back-link">← Back to Heroes</a>
+
+  <div class="ground-bottom">
+    <div class="fence-b"></div>
+    <div class="grass-b"></div>
+    <span class="fl" style="left:80px;">🌸</span>
+    <span class="fl" style="left:260px;">🌻</span>
+    <span class="fl" style="right:180px;">🌼</span>
+    <span class="fl" style="right:60px;">🌷</span>
+  </div>
+</div>
+
+<div class="modal-overlay" id="forgotModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('forgotModal')">✕</button>
+    <div class="modal-title" style="color:var(--teal);">Reset Password</div>
+    <p class="modal-subtitle">Enter your email to get a magic link!</p>
+    <div class="form-group" style="text-align:left;">
+      <label class="form-label" for="resetEmailInput">Your Email</label>
+      <input type="email" class="form-input" id="resetEmailInput" placeholder="hero@example.com" autocomplete="email">
+      <small id="modalStatus" style="display:block;margin-top:10px;font-weight:bold;font-size:13px;" aria-live="polite"></small>
+    </div>
+    <button class="btn btn-teal" id="modalBtn" onclick="sendResetRequest()" style="width:100%;">Send Link</button>
+    <div style="margin-top:15px;font-size:13px;color:var(--text-mid);border-top:1px solid #eee;padding-top:15px;">
+      Don't have an email? Ask your parent to help you from their dashboard!
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+<script>
+  'use strict';
+
+  /* ══════════════════════════════════════════════════════════
+     DOM READY
+  ══════════════════════════════════════════════════════════ */
+  document.addEventListener('DOMContentLoaded', () => {
+    // Auto-focus username for fast keyboard login
+    document.getElementById('username').focus();
+
+    // STEP 2 — Native form submit listener (handles both button click and Enter key)
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      doLogin();
+    });
+
+    // Clear error banner as soon as the child starts retyping
+    ['username', 'password'].forEach((id) => {
+      document.getElementById(id).addEventListener('input', hideError);
+    });
+  });
+
+  /* ══════════════════════════════════════════════════════════
+     STEP 2 — FORM SUBMISSION
+     Native fetch → POST /Auth/login-child
+     Headers: Content-Type + X-Device-Fingerprint
+  ══════════════════════════════════════════════════════════ */
+  async function doLogin() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+
+    // Local validation — DOM banner, no alert()
+    hideError();
+    if (!username) { showError('Please enter your username 🌱'); return; }
+    if (!password) { showError('Please enter your password 🔒'); return; }
+
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/Auth/login-child`, {
+        method:  'POST',
+        headers: {
+          'Content-Type':         'application/json',
+          'X-Device-Fingerprint': getOrCreateDeviceId()
+        },
+        body: JSON.stringify({ Username: username, Password: password })
+      });
+
+      let result;
+      try {
+        result = await res.json();
+      } catch {
+        throw new Error('Unexpected server response. Please try again.');
+      }
+
+      if (res.ok) {
+        /* ── STEP 3a — Password Reset Challenge Flow ── */
+        if (result.passwordResetRequired === true) {
+          // Persist the intermediate token so child-new-password.html can authenticate
+          if (result.token) { setChildToken(result.token); }
+          window.location.href =
+            `child-new-password.html?username=${encodeURIComponent(result.username || username)}`;
+          return;
+        }
+
+        /* ── STEP 3b — Normal Successful Login ── */
+        if (!result.token) {
+          showError('Login failed: no session received. Please try again.');
+          return;
+        }
+        setChildToken(result.token);
+        if (result.userId) { localStorage.setItem('userId', String(result.userId)); }
+        window.location.href = 'leafy.html';
+
+      } else {
+        // Non-2xx — surface a friendly, child-appropriate message
+        const msg = result?.message || result?.title || null;
+        if (res.status === 401) {
+          showError(msg || 'Wrong username or password. Try again! 🔒');
+          document.getElementById('password').value = '';
+          document.getElementById('password').focus();
+        } else if (res.status === 403) {
+          showError(msg || 'Your account is not active. Ask your parent for help! 🌟');
+        } else if (res.status === 429) {
+          showError('Too many attempts! Please wait a moment and try again. ⏳');
+        } else if (res.status >= 500) {
+          showError('The server is having a problem. Please try again in a moment! 🛠');
+        } else {
+          showError(msg || `Something went wrong (error ${res.status}). Please try again.`);
+        }
+      }
+    } catch (err) {
+      const isParseErr = err?.message?.includes('Unexpected server');
+      showError(isParseErr ? err.message : 'Could not reach the server. Check your connection! 🌐');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     FORGOT PASSWORD
+  ══════════════════════════════════════════════════════════ */
+  async function sendResetRequest() {
+    const email     = document.getElementById('resetEmailInput').value.trim();
+    const statusMsg = document.getElementById('modalStatus');
+    const btn       = document.getElementById('modalBtn');
+
+    statusMsg.textContent = '';
+    if (!email) {
+      statusMsg.style.color = '#f87171';
+      statusMsg.textContent = 'Please enter your email first';
+      return;
+    }
+
+    btn.disabled    = true;
+    btn.textContent = 'Sending...';
+
+    try {
+      const res    = await fetch(`${API_BASE_URL}/Auth/forgot-password`, {
+        method:  'POST',
+        headers: {
+          'Content-Type':         'application/json',
+          'X-Device-Fingerprint': getOrCreateDeviceId()
+        },
+        body: JSON.stringify({ email })
+      });
+      let result;
+      try { result = await res.json(); } catch { result = {}; }
+
+      if (res.ok) {
+        statusMsg.style.color = '#10b981';
+        statusMsg.textContent = result.message || 'Magic link sent! Check your inbox. ✅';
+      } else {
+        statusMsg.style.color = '#f87171';
+        statusMsg.textContent = result.message || 'Something went wrong. Please try again.';
+      }
+    } catch {
+      statusMsg.style.color = '#f87171';
+      statusMsg.textContent = 'Connection error. Please try again.';
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = 'Send Link';
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     UI HELPERS — DOM-only, zero blocking
+  ══════════════════════════════════════════════════════════ */
+
+  /** Show the error banner. Auto-hides after 6 seconds. */
+  function showError(message) {
+    const el = document.getElementById('errorMessage');
+    el.textContent   = message;
+    el.style.display = 'block';
+    if (showError._timer) clearTimeout(showError._timer);
+    showError._timer = setTimeout(hideError, 6000);
+  }
+
+  function hideError() {
+    const el = document.getElementById('errorMessage');
+    if (el) el.style.display = 'none';
+  }
+
+  /** Toggle button between loading and ready states. */
+  function setLoading(isLoading) {
+    const btn = document.getElementById('loginBtn');
+    if (!btn) return;
+    if (isLoading) {
+      btn.disabled  = true;
+      btn.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span>Entering the Garden…';
+    } else {
+      btn.disabled  = false;
+      btn.textContent = 'Enter the Garden';
+    }
+  }
+</script>
+</body>
+</html>

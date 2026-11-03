@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Growia - Welcome</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* ── Hero Section ─────────────────────────────────── */
+    .hero {
+      background: var(--sky-light);
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 60px 20px 80px;
+      position: relative; overflow: hidden;
+    }
+
+    .hero-clouds { position: absolute; inset: 0; pointer-events: none; }
+
+    .cloud-1 { width: 100px; height: 40px; top: 80px;  left: 60px;  }
+    .cloud-1::before { width: 50px; height: 50px; top: -20px; left: 15px; }
+    .cloud-2 { width: 130px; height: 45px; top: 60px;  left: 380px; }
+    .cloud-2::before { width: 60px; height: 60px; top: -25px; left: 20px; }
+    .cloud-3 { width: 90px;  height: 35px; top: 100px; right: 250px; }
+    .cloud-3::before { width: 45px; height: 45px; top: -18px; left: 12px; }
+
+    .bird-1 { top: 130px; left: 220px; }
+    .bird-2 { top: 100px; right: 350px; }
+
+    /* Leafy mascot */
+    .leafy-wrap {
+      position: relative; margin-bottom: 20px; cursor: pointer;
+    }
+    .leafy-img {
+      width: 130px; height: 130px;
+      animation: float 3s ease-in-out infinite;
+      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.15));
+    }
+    .leafy-bubble {
+      position: absolute; top: -44px; left: 50%; transform: translateX(-50%);
+      background: white; border-radius: 20px; padding: 8px 16px;
+      font-size: 14px; font-weight: 700; color: var(--text-dark);
+      white-space: nowrap; box-shadow: var(--shadow-sm);
+      opacity: 0; transition: opacity 0.3s; pointer-events: none;
+    }
+    .leafy-bubble::after {
+      content: ''; position: absolute; bottom: -8px; left: 50%;
+      transform: translateX(-50%);
+      border: 8px solid transparent;
+      border-top-color: white; border-bottom: none;
+    }
+    .leafy-bubble.show { opacity: 1; }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(40px, 6vw, 64px);
+      color: var(--coral); margin-bottom: 16px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .hero-subtitle {
+      font-size: 18px; color: var(--teal); max-width: 600px;
+      line-height: 1.6; font-weight: 600;
+    }
+
+    /* ── سهم التمرير لأسفل ────────────────── */
+    .scroll-down {
+      position: absolute;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 46px;
+      height: 46px;
+      background: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--teal, #008080);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      cursor: pointer;
+      z-index: 10;
+      animation: bounce 2s infinite;
+      transition: all 0.25s ease;
+    }
+
+    .scroll-down:hover {
+      background: var(--teal, #008080);
+      color: white;
+      transform: translateX(-50%) scale(1.1);
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-4px);
+      }
+    }
+
+    /* ── Role Cards Section ───────────────────────────── */
+    .are-you-section {
+      background: var(--peach); padding: 80px 20px; text-align: center;
+    }
+    .are-you-title {
+      font-family: var(--font-display); font-size: 36px;
+      color: var(--text-dark); margin-bottom: 48px;
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+    }
+    .role-cards {
+      display: flex; gap: 32px; justify-content: center;
+      flex-wrap: wrap; margin-bottom: 24px;
+    }
+    .role-card {
+      width: 280px; height: 220px;
+      border-radius: var(--radius-xl);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 16px;
+      cursor: pointer; text-decoration: none;
+      transition: all 0.25s ease;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    }
+    .role-card:hover { transform: translateY(-6px); box-shadow: 0 12px 30px rgba(0,0,0,0.18); }
+    .role-card.child    { background: #f5c842; }
+    .role-card.guardian { background: #f28b6e; }
+    .role-icon  { font-size: 52px; }
+    .role-label { font-family: var(--font-display); font-size: 26px; color: var(--text-dark); }
+    .role-card.guardian .role-label { color: white; }
+
+    .admin-link {
+      display: block; text-align: center;
+      font-size: 13px; color: var(--text-light);
+      text-decoration: none; margin-top: 8px;
+    }
+    .admin-link:hover { color: var(--teal); }
+
+    /* ── Footer ───────────────────────────────────────── */
+    .footer {
+      background: var(--lime-bg); padding: 48px 60px;
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px;
+    }
+    .footer-section h3 {
+      font-family: var(--font-display); font-size: 18px;
+      color: var(--green-dark); margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .footer-section p   { font-size: 14px; color: var(--text-mid); line-height: 1.6; }
+    .footer-section ul  { list-style: none; }
+    .footer-section ul li { margin-bottom: 6px; }
+    .footer-section ul li a { font-size: 14px; color: var(--text-mid); text-decoration: none; }
+    .footer-section ul li a:hover { color: var(--teal); }
+
+    .say-hello-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px; background: var(--teal); color: white;
+      border-radius: var(--radius-full); font-weight: 700; font-size: 14px;
+      text-decoration: none; margin-top: 8px; transition: all 0.2s;
+    }
+    .say-hello-btn:hover { background: var(--green-dark); }
+
+    @media (max-width: 640px) {
+      .footer { grid-template-columns: 1fr; padding: 40px 24px; }
+      .role-cards { flex-direction: column; align-items: center; }
+    }
+  </style>
+</head>
+<body>
+
+<section class="hero garden-bg">
+  <div class="hero-clouds">
+    <div class="cloud-shape cloud-1"></div>
+    <div class="cloud-shape cloud-2"></div>
+    <div class="cloud-shape cloud-3"></div>
+    <div class="bird bird-1">🐦</div>
+    <div class="bird bird-2">🐟</div>
+  </div>
+
+  <div class="leafy-wrap" onclick="cycleMessage()">
+    <div class="leafy-bubble" id="leafyBubble">I believe in you!</div>
+    <div class="leafy-img">
+      <svg viewBox="0 0 130 130" xmlns="http://www.w3.org/2000/svg" width="130" height="130">
+        <rect x="58" y="100" width="14" height="22" rx="7" fill="#c8a882"/>
+        <ellipse cx="65" cy="122" rx="22" ry="8" fill="#e8b89a"/>
+        <ellipse cx="65" cy="72" rx="42" ry="46" fill="#5cb85c"/>
+        <circle cx="52" cy="68" r="7" fill="white"/>
+        <circle cx="78" cy="68" r="7" fill="white"/>
+        <circle cx="54" cy="70" r="4" fill="#1a6b3a"/>
+        <circle cx="80" cy="70" r="4" fill="#1a6b3a"/>
+        <circle cx="55" cy="69" r="1.5" fill="white"/>
+        <circle cx="81" cy="69" r="1.5" fill="white"/>
+        <path d="M52 82 Q65 92 78 82" fill="none" stroke="#1a6b3a" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="44" cy="76" r="6" fill="#ff9999" opacity="0.5"/>
+        <circle cx="86" cy="76" r="6" fill="#ff9999" opacity="0.5"/>
+        <ellipse cx="30" cy="45" rx="12" ry="18" fill="#4aa84a" transform="rotate(-20 30 45)"/>
+        <ellipse cx="100" cy="45" rx="12" ry="18" fill="#4aa84a" transform="rotate(20 100 45)"/>
+      </svg>
+    </div>
+  </div>
+
+  <h1 class="hero-title">Welcome to Growia!</h1>
+  <p class="hero-subtitle">
+    Growia is a magical garden where your daily habits bloom into superpowers!
+    Whether you are a hero-in-training or a guiding parent, we help you grow
+    together through fun challenges, smart tips, and shared journeys.
+  </p>
+
+  <div class="scroll-down" onclick="window.scrollTo({top: window.innerHeight, behavior: 'smooth'});">
+    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19"></line>
+      <polyline points="19 12 12 19 5 12"></polyline>
+    </svg>
+  </div>
+</section>
+
+<section class="are-you-section">
+  <h2 class="are-you-title">Are you?</h2>
+
+  <div class="role-cards">
+    <a href="hero-hub.html" class="role-card child">
+      <div class="role-icon">🎈</div>
+      <div class="role-label">A Child</div>
+    </a>
+    <a href="parent-login.html" class="role-card guardian">
+      <div class="role-icon">🛡️</div>
+      <div class="role-label">A Guardian</div>
+    </a>
+  </div>
+
+  <a href="admin-login.html" class="admin-link">Admin Portal</a>
+</section>
+
+<footer class="footer">
+  <div class="footer-section">
+    <h3>About Us</h3>
+    <p>Growia was built to make growing up an adventure. We use our smart buddy "Leafy" to help kids stay healthy and parents stay connected.</p>
+  </div>
+  <div class="footer-section">
+    <h3>Quick Links</h3>
+    <ul>
+      <li><a href="#">Privacy Policy</a></li>
+      <li><a href="#">Terms of Use</a></li>
+      <li><a href="#">FAQ</a></li>
+    </ul>
+  </div>
+  <div class="footer-section">
+    <h3>Contact</h3>
+    <p>Need help? Message the Garden Keepers!</p>
+    <a href="#" class="say-hello-btn">Say Hello</a>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+<script>
+  const MESSAGES = [
+    "I believe in you!",
+    "You're doing great!",
+    "Let's grow together!",
+    "You're a superstar!",
+    "Keep it up, hero!"
+  ];
+  let msgIndex = 0;
+
+  function cycleMessage() {
+    const bubble = document.getElementById('leafyBubble');
+    msgIndex = (msgIndex + 1) % MESSAGES.length;
+    bubble.textContent = MESSAGES[msgIndex];
+    bubble.classList.add('show');
+    clearTimeout(window._bubbleTimer);
+    window._bubbleTimer = setTimeout(() => bubble.classList.remove('show'), 2500);
+  }
+
+  // Show first message shortly after load
+  setTimeout(() => {
+    const bubble = document.getElementById('leafyBubble');
+    bubble.classList.add('show');
+    setTimeout(() => bubble.classList.remove('show'), 2500);
+  }, 800);
+</script>
+</body>
+</html>

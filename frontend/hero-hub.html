@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Growia - Hero Hub</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { margin: 0; }
+
+    .page {
+      min-height: 100vh; background: var(--sky-light);
+      position: relative; overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+
+    /* Top bar */
+    .top-bar {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      padding: 20px 24px; position: relative; z-index: 10;
+    }
+
+    .top-bar-right {
+      position: absolute; top: 16px; right: 16px;
+      display: flex; flex-direction: column; align-items: flex-end; gap: 12px; z-index: 20;
+    }
+
+    .top-btn-row { display: flex; gap: 10px; }
+
+    .login-page-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 20px; background: white; color: var(--teal);
+      border: 2px solid var(--teal); border-radius: var(--radius-full);
+      font-weight: 800; font-size: 15px; cursor: pointer;
+      text-decoration: none; box-shadow: var(--shadow-sm); transition: all 0.2s;
+    }
+    .login-page-btn:hover { background: var(--teal); color: white; transform: translateY(-2px); }
+
+    .add-hero-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 20px; background: var(--yellow); color: var(--text-dark);
+      border-radius: var(--radius-full); font-weight: 800; font-size: 15px;
+      cursor: pointer; border: none; text-decoration: none;
+      box-shadow: var(--shadow-sm); transition: all 0.2s;
+    }
+    .add-hero-btn:hover { background: var(--yellow-dark); transform: translateY(-2px); }
+
+    .sun-face {
+      width: 110px; height: 110px;
+      background: radial-gradient(circle, #ffe066, #f5c842);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 52px; box-shadow: 0 0 30px rgba(245,200,66,0.4);
+      animation: float 4s ease-in-out infinite;
+    }
+
+    /* Decorative clouds */
+    .cloud-d { position: absolute; background: white; border-radius: 50px; opacity: 0.9; }
+    .cloud-d::before { content: ''; position: absolute; background: white; border-radius: 50%; }
+    .cd1 { width: 100px; height: 38px; top: 80px; left: 50px; }
+    .cd1::before { width: 48px; height: 48px; top: -18px; left: 14px; }
+    .cd2 { width: 120px; height: 42px; top: 60px; left: 380px; }
+    .cd2::before { width: 56px; height: 56px; top: -22px; left: 18px; }
+
+    /* Heroes area */
+    .heroes-area {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      gap: 80px; padding: 20px 40px 130px; flex-wrap: wrap;
+      position: relative; z-index: 5;
+    }
+
+    .hero-item {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 12px; cursor: pointer; transition: all 0.2s;
+    }
+
+    .hero-circle {
+      width: 160px; height: 160px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-size: 56px; color: white;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15); transition: all 0.25s;
+    }
+
+    .hero-item:hover .hero-circle { transform: scale(1.06); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+    .hero-item.selected .hero-circle { outline: 5px solid var(--yellow); box-shadow: 0 0 0 8px rgba(245,200,66,0.3); }
+
+    .hero-name { font-family: var(--font-display); font-size: 22px; color: var(--teal); }
+
+    .hero-login { display: none; flex-direction: column; gap: 10px; align-items: center; margin-top: 4px; }
+    .hero-item.selected .hero-login { display: flex; }
+
+    .hero-pass-input {
+      padding: 10px 14px 10px 36px; border: 2px solid #e0e0e0;
+      border-radius: var(--radius-full); font-family: var(--font-main); font-size: 15px;
+      width: 200px; outline: none;
+      background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2'%3E%3Crect x='3' y='11' width='18' height='11' rx='2'/%3E%3Cpath d='M7 11V7a5 5 0 0 1 10 0v4'/%3E%3C/svg%3E") no-repeat 10px center;
+      transition: border-color 0.2s;
+    }
+    .hero-pass-input:focus { border-color: var(--teal); }
+    .hero-pass-input.error { border-color: var(--red-alert); }
+
+    .enter-btn {
+      padding: 9px 20px; background: var(--yellow); border: none;
+      border-radius: var(--radius-full); font-family: var(--font-main);
+      font-weight: 800; font-size: 15px; cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; gap: 6px; width: 200px; justify-content: center;
+    }
+    .enter-btn:hover { background: var(--yellow-dark); transform: scale(1.03); }
+
+    .reset-prompt {
+      font-size: 12px; color: var(--teal); cursor: pointer;
+      text-decoration: underline; margin-top: -4px;
+    }
+
+    .empty-state { padding: 40px; text-align: center; }
+    .empty-state p { font-size: 18px; color: var(--teal); margin-bottom: 8px; }
+    .empty-state small { font-size: 14px; color: var(--text-light); }
+
+    .btn-teal { background: var(--teal); color: white; width: 100%; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <div class="cloud-d cd1"></div>
+  <div class="cloud-d cd2"></div>
+  <div class="bird" style="top:140px;left:230px;">🐦</div>
+  <div class="bird" style="top:100px;right:230px;">🐦</div>
+  <div class="butterfly" style="top:320px;left:120px;">🦋</div>
+  <div class="butterfly" style="top:280px;right:130px;animation-delay:-2s;">🦋</div>
+  <div class="butterfly" style="top:230px;right:200px;">🦋</div>
+  <div class="ladybug" style="top:380px;left:50px;">🐞</div>
+
+  <div class="top-bar">
+    <a href="index.html" class="back-btn">← Back</a>
+  </div>
+
+  <div class="top-bar-right">
+    <div class="top-btn-row">
+      <a href="child_login.html" class="login-page-btn">Child Login</a>
+      <a href="child-signup.html" class="add-hero-btn">Add a new hero</a>
+    </div>
+    <div class="sun-face">☀️</div>
+  </div>
+
+  <div class="heroes-area" id="heroesArea">
+    <div class="empty-state">
+      <p>Loading your heroes...</p>
+    </div>
+  </div>
+
+  <div class="ground-section">
+    <div class="fence-strip"></div>
+    <div class="grass-strip"></div>
+    <div class="flower" style="left:80px;">🌸</div>
+    <div class="flower" style="left:260px;">🌻</div>
+    <div class="flower" style="left:600px;">🌷</div>
+    <div class="flower" style="right:150px;">🌼</div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="resetModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('resetModal')">✕</button>
+    <div class="modal-title">Forgot Password?</div>
+    <p class="modal-subtitle">Ask your parent to help reset your password from their dashboard.</p>
+    <p style="font-size:14px;color:var(--text-mid);line-height:1.6;">
+      Your parent can go to <strong>Parent Dashboard → Your Profile → Help Reset Password</strong>.
+      Next time you log in, you will be able to set a new password yourself!
+    </p>
+    <button class="btn btn-teal" style="margin-top:20px;" onclick="closeModal('resetModal')">Got it!</button>
+  </div>
+</div>
+
+<script src="script.js"></script>
+<script>
+  let selectedHero   = null;
+  let childProfiles  = [];
+
+  const HERO_COLORS = [
+    'linear-gradient(135deg,#f8a0a0,#e07878)',
+    'linear-gradient(135deg,#a0d8e8,#6ab8ce)',
+    'linear-gradient(135deg,#c8d870,#a8b850)',
+    'linear-gradient(135deg,#FFD93D,#F9AD6A)',
+    'linear-gradient(135deg,#D7BDE2,#BB8FCE)'
+  ];
+
+  /* ── Load hero profiles ────────────────────────────── */
+  async function loadChildProfiles() {
+    const deviceId = getOrCreateDeviceId();
+    try {
+      const res = await fetch(`${API_BASE_URL}/Auth/device-children`, {
+        headers: {
+          'Content-Type':         'application/json',
+          'X-Device-Fingerprint': deviceId
+        }
+      });
+      if (res.ok) {
+        childProfiles = await res.json();
+        renderHeroes();
+      } else { renderEmpty(); }
+    } catch { renderEmpty(); }
+  }
+
+  function renderEmpty() {
+    document.getElementById('heroesArea').innerHTML = `
+      <div class="empty-state">
+        <p>No heroes yet</p>
+        <small>Click "Add a new hero" to create your first adventure!</small>
+      </div>`;
+  }
+
+  function renderHeroes() {
+    if (!childProfiles?.length) { renderEmpty(); return; }
+
+    document.getElementById('heroesArea').innerHTML = childProfiles.map((child, i) => {
+      const username = child.username || child.userName;
+      const fullName = child.fullName || 'Unknown Hero';
+      const initial  = (fullName.charAt(0) || 'H').toUpperCase();
+      const color    = HERO_COLORS[i % HERO_COLORS.length];
+      return `
+        <div class="hero-item" id="hero-${username}" onclick="selectHero('${username}')">
+          <div class="hero-circle" style="background:${color}">${initial}</div>
+          <div class="hero-name">${fullName}</div>
+          <div class="hero-login">
+            <input type="password" class="hero-pass-input" placeholder="••••••" id="pass-${username}">
+            <button class="enter-btn" onclick="enterHero('${username}',event)">Enter</button>
+            <span class="reset-prompt" onclick="showResetInfo(event)">Forgot password?</span>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  /* ── Hero selection ────────────────────────────────── */
+  function selectHero(username) {
+    if (selectedHero === username) return;
+    document.querySelectorAll('.hero-item').forEach(el => el.classList.remove('selected'));
+    document.getElementById(`hero-${username}`)?.classList.add('selected');
+    selectedHero = username;
+    setTimeout(() => document.getElementById(`pass-${username}`)?.focus(), 150);
+  }
+
+  /* ── Enter hero (login) ────────────────────────────── */
+  async function enterHero(username, e) {
+    if (e) e.stopPropagation();
+    const input    = document.getElementById(`pass-${username}`);
+    const password = input.value.trim();
+
+    if (!password) {
+      input.classList.add('error');
+      input.placeholder = 'Enter your password';
+      setTimeout(() => input.classList.remove('error'), 2000);
+      return;
+    }
+
+    input.disabled    = true;
+    input.placeholder = 'Checking...';
+    input.classList.remove('error');
+
+    try {
+      const res    = await fetch(`${API_BASE_URL}/Auth/login-child`, {
+        method:  'POST',
+        headers: {
+          'Content-Type':       'application/json',
+          'X-Device-Fingerprint': getOrCreateDeviceId()
+        },
+        body: JSON.stringify({ Username: username, Password: password })
+      });
+      const result = await res.json();
+
+      if (res.ok) {
+        setChildToken(result.token);
+        localStorage.setItem('userId', result.userId);
+        if (result.passwordResetRequired) {
+          window.location.href = `child-new-password.html?username=${encodeURIComponent(username)}`;
+        } else {
+          window.location.href = 'leafy.html';
+        }
+      } else {
+        input.value       = '';
+        input.classList.add('error');
+        input.placeholder = result.message || 'Wrong password';
+        setTimeout(() => { input.classList.remove('error'); input.placeholder = '••••••'; }, 3000);
+      }
+    } catch {
+      input.placeholder = 'Connection error';
+    } finally {
+      input.disabled = false;
+    }
+  }
+
+  function showResetInfo(e) {
+    e.stopPropagation();
+    openModal('resetModal');
+  }
+
+  /* ── Keyboard support ──────────────────────────────── */
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && selectedHero) {
+      enterHero(selectedHero, { stopPropagation: () => {} });
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', loadChildProfiles);
+</script>
+</body>
+</html>

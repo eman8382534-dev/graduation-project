@@ -1,0 +1,152 @@
+/* إعدادات الخطوط والصفحة العامة */
+body {
+    font-family: 'Fredoka', sans-serif;
+    background-color: #fcfcfc;
+    margin: 0;
+    padding: 0;
+    color: #3E2A1F;
+}
+
+/* الأزرار العامة */
+.btn {
+    font-family: 'Fredoka', sans-serif;
+    padding: 10px 20px;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: scale(1.05);
+}
+
+.btn-yellow {
+    background: #FFD97D !important;
+    border: none !important;
+    color: #3E2A1F;
+}
+
+.btn-pink {
+    background: #FF8A8A !important;
+    color: white !important;
+    border: none !important;
+}
+
+/* الكروت ولوحات التحكم */
+.dashboard-card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 30px;
+    border: 1px solid #eee;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+    transition: all 0.3s ease;
+}
+
+.dashboard-card:hover {
+    box-shadow: 0 6px 15px rgba(0,0,0,0.05);
+}
+
+/* الشارات الدائرية */
+.badge-circle {
+    width: 45px;
+    height: 45px;
+    background: #f0f0f0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.badge-active {
+    background: #FFD97D !important;
+}
+
+/* أزرار المفكرة اليومية */
+.journal-btn {
+    background: #f9f9f9;
+    padding: 12px;
+    border-radius: 15px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: 1px solid #eee;
+}
+
+/* القائمة المنسدلة للـ More */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #fff;
+    min-width: 180px;
+    box-shadow: 0px 8px 16px rgba(0,0,0,0.15);
+    z-index: 100;
+    border-radius: 15px;
+    right: 0;
+    overflow: hidden;
+}
+
+.dropdown-content a {
+    color: #333;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-content a:hover {
+    background-color: #FFF0F3;
+    color: #FF8A8A;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+/* التفاعل الخاص بصفحة المذكرات التفصيلية journal.html */
+.hobby-item {
+    background: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-family: inherit;
+    font-weight: 600;
+    color: #555;
+    cursor: pointer;
+    transition: 0.2s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.hobby-item.selected-hobby {
+    background: #FFD97D !important;
+    color: #3E2A1F;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* أكواب الماء */
+.water-badge {
+    width: 35px;
+    height: 35px;
+    background: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border: 1px solid #ccc;
+    cursor: pointer;
+}
+
+.water-badge.badge-active {
+    background: #4FC3F7 !important;
+    color: white;
+    border-color: #4FC3F7;
+}

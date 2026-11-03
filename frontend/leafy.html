@@ -1,0 +1,1750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Growia - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="leafy.css">
+    <style>
+        /* ── الألوان المستوحاة من صفحة الـ Journal ── */
+        :root {
+            --clr-academic:   #F9FBE7; --clr-academic-b:   #F0F4C3; --clr-academic-t:   #827717;
+            --clr-religious:  #E8EAF6; --clr-religious-b:  #C5CAE9; --clr-religious-t:  #3F51B5;
+            --clr-physical:   #E0F2F1; --clr-physical-b:   #B2DFDB; --clr-physical-t:   #00796B;
+            --clr-social:     #FCE4EC; --clr-social-b:     #F8BBD0; --clr-social-t:     #AD1457;
+            --clr-emotional:  #FFFDE7; --clr-emotional-b:  #FFF9C4; --clr-emotional-t:  #FBC02D;
+            --clr-resilience: #EDE7F6; --clr-resilience-b: #D1C4E9; --clr-resilience-t: #4527A0;
+            
+            --clr-primary: #FFD97D;
+            --clr-primary-dark: #c49a00;
+            --clr-primary-text: #7a5000;
+        }
+
+        /* ── Dropdown ── */
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-content {
+            display: none; position: absolute; background-color: #fff;
+            min-width: 180px; box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+            z-index: 100; border-radius: 10px; right: 0;
+        }
+        .dropdown-content a { color: #333; padding: 12px 16px; text-decoration: none; display: block; cursor: pointer; font-size: 16px; } /* كبّرنا الخط */
+        .dropdown-content a:hover { background-color: #f1f1f1; border-radius: 10px; }
+        .dropdown:hover .dropdown-content { display: block; }
+
+        /* ── Progress section ── */
+        .progress-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px; text-align: center; margin-top: 20px; margin-bottom: 20px;
+        }
+        .progress-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .progress-item .badge-circle { margin: 0 auto; }
+        .progress-bar-wrap { width: 80%; height: 6px; background: #f0f0f0; border-radius: 10px; margin: 4px auto 0; }
+        .progress-bar-fill { height: 100%; border-radius: 10px; background: var(--fill-color, #FF8A8A); transition: width 0.6s ease; }
+        
+        .bar-academic { --fill-color: var(--clr-academic-t); }
+        .bar-religious { --fill-color: var(--clr-religious-t); }
+        .bar-physical { --fill-color: var(--clr-physical-t); }
+        .bar-social { --fill-color: var(--clr-social-t); }
+        .bar-emotional { --fill-color: var(--clr-emotional-t); }
+        .bar-resilience { --fill-color: var(--clr-resilience-t); }
+
+        /* ── Pillar badge orbs ── */
+        #badges-row {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            scrollbar-width: none;
+            align-items: center;
+        }
+        #badges-row::-webkit-scrollbar { display: none; }
+
+        .pillar-badge-orb {
+            flex-shrink: 0;
+            position: relative;
+            transition: transform .18s;
+        }
+        .pillar-badge-orb:hover { transform: scale(1.12); }
+
+        /* Suggestion banner */
+        #badge-suggestion {
+            display: none;
+            margin-top: 8px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 10px;
+            padding: 7px 11px;
+            font-size: .95rem; /* كبّرنا الخط وخليناه واضح */
+            color: #558b8f;
+            font-weight: 600;
+            line-height: 1.4;
+            border-left: 3px solid var(--clr-primary);
+        }
+
+        /* Badge popup tooltip */
+        .badge-popup {
+            position: absolute;
+            bottom: 64px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            border-radius: 14px;
+            padding: 10px 13px;
+            width: 180px;
+            box-shadow: 0 6px 20px rgba(0,0,0,.15);
+            border-top: 3px solid var(--clr-primary);
+            z-index: 99;
+            pointer-events: none;
+            line-height: 1.5;
+            font-size: 15px; /* كبّرنا الخط */
+        }
+
+        .badge-pill {
+            background: #FFF0F3; border: 1px solid #FFB7B2; border-radius: 20px;
+            padding: 4px 12px; font-size: 14px; color: #FF6B6B; /* كبّرنا الخط */
+            display: flex; align-items: center; gap: 5px;
+        }
+
+        /* ── Skeleton / shimmer ── */
+        .skeleton {
+            background: linear-gradient(90deg, #f5f5f5 25%, #eee 50%, #f5f5f5 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+            border-radius: 8px;
+        }
+        @keyframes shimmer {
+            0%   { background-position: -200% 0; }
+            100% { background-position:  200% 0; }
+        }
+        .skeleton-text  { height: 16px; margin: 6px 0; }
+        .skeleton-title { height: 28px; width: 60%; margin: 4px 0 10px; }
+        .skeleton-bar   { height: 6px;  width: 80%; margin: 4px auto; }
+
+        /* ── Standalone banner ── */
+        #standalone-banner {
+            display: none; background: #FFF3E0; border: 1px solid #FFCC80;
+            border-radius: 20px; padding: 12px 20px; margin-bottom: 20px;
+            color: #E65100; font-size: 16px; /* كبّرنا الخط */
+        }
+
+        /* ── Toast notification ── */
+        #toast {
+            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+            background: #333; color: #fff; padding: 10px 24px; border-radius: 30px;
+            font-size: 16px; opacity: 0; transition: opacity 0.3s; z-index: 9999; /* كبّرنا الخط */
+            pointer-events: none; white-space: nowrap;
+        }
+        #toast.show { opacity: 1; }
+
+        /* ── Spiritual alert ── */
+        #spiritual-alert {
+            display: none; background: #FFEBEE; padding: 15px;
+            border-radius: 20px; gap: 15px; align-items: center; margin-top: 15px;
+            font-size: 16px; /* كبّرنا الخط */
+        }
+
+        /* ── Journey path ── */
+        .journey-preview-wrap { position: relative; overflow: hidden; padding: 0; }
+        .journey-path {
+            display: flex; align-items: center; justify-content: space-between;
+            position: relative; width: 100%; padding: 40px 16px 18px; gap: 0;
+        }
+        .journey-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+
+        /* ── Node ── */
+        .jn-wrap { display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 1; position: relative; z-index: 2; }
+        .jn-circle {
+            width: 52px; height: 52px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; font-weight: 700; /* كبّرنا أرقام الإيموجي أو الخط جوه الدائرة */
+            flex-shrink: 0; transition: transform .15s; cursor: default;
+        }
+        .jn-done   { background: var(--clr-primary); box-shadow: 0 3px 0 var(--clr-primary-dark); color: var(--clr-primary-text); }
+        .jn-active { background: var(--clr-primary); box-shadow: 0 0 0 7px rgba(255,217,125,.3), 0 3px 0 var(--clr-primary-dark); animation: jnPulse 2s infinite; color: var(--clr-primary-text); }
+        .jn-locked { background: #ead5d5; box-shadow: 0 3px 0 #ccc; color: #ccc; }
+        
+        @keyframes jnPulse {
+            0%,100%{ box-shadow: 0 0 0 7px rgba(255,217,125,.3), 0 3px 0 var(--clr-primary-dark); }
+            50%    { box-shadow: 0 0 0 13px rgba(255,217,125,.1), 0 3px 0 var(--clr-primary-dark); }
+        }
+        .jn-label {
+            font-size: .85rem; font-weight: 700; text-align: center; /* كبّرنا نصوص الفئات تحت الدوائر لتبدو واضحة */
+            color: #e6536f; line-height: 1.2; max-width: 75px;
+        }
+        .jn-label.jn-locked-lbl { color: #ccc; }
+
+        .jn-deco { position: absolute; top: -18px; right: 2px; font-size: 1.1rem; animation: jnFloat 3s ease-in-out infinite; }
+        @keyframes jnFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+
+        .step-node {
+            position: relative; z-index: 1; width: 42px; height: 42px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 1.2rem; /* كبّرنا الخط داخل الـ step */
+        }
+        .step-done    { background: #C8E6C9; color: #388E3C; }
+        .step-active  { background: #B2EBF2; color: #00796B; }
+        .step-pending { background: #eee; color: #aaa; }
+
+        button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+        /* ── Sky background ── */
+        body {
+            background: linear-gradient(180deg, #D0F4FF 0%, #E0F7F9 100%);
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 17px; /* كبّرنا حجم الخط الافتراضي لكل نصوص الصفحة العادية */
+        }
+
+        body::after {
+            content: ''; display: block; height: 80px;
+            background: linear-gradient(180deg, #A8D5A2 0%, #88C57A 100%); margin-top: -20px;
+        }
+
+        .global-footer {
+            background: #f5f5f5; padding: 30px 5%; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px; margin-top: 30px;
+        }
+        .footer-col h3 { color: #FF8A8A; margin-bottom: 8px; font-size: 19px; } /* كبّرنا عناوين الفوتر */
+        .footer-col ul { list-style: none; padding: 0; line-height: 2; color: #4A6D6D; font-size: 15px; }
+        .footer-col ul li a { color: inherit; text-decoration: none; }
+        .footer-col ul li a:hover { color: #FF8A8A; }
+
+        .error-state { text-align: center; padding: 30px; color: #aaa; font-size: 1.1rem; }
+
+        /* ── Journal pills ── */
+        .jpill {
+            padding: 8px 12px; border-radius: 14px;
+            font-size: 0.95rem; /* كبّرنا نصوص الـ Pills */
+            font-weight: 600; display: flex; align-items: center; gap: 6px; transition: background 0.2s;
+        }
+        .jpill-pending { background: #F5F5F5; color: #999; }
+        .jpill-done { background: #F1F8E9; color: #558B2F; }
+        .jpill-done::after { content: " ✓"; color: #558B2F; font-weight: 700; margin-left: auto; }
+        
+        .journal-pending-notice {
+            font-size: 0.9rem; /* كبّرنا الخط */
+            color: #FF8A8A; font-weight: 600; display: flex; align-items: center; gap: 5px; margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- Toast notification -->
+    <div id="toast" role="status" aria-live="polite"></div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         DASHBOARD PAGE
+    ═══════════════════════════════════════════════════════════ -->
+    <section id="dashboard-page" style="padding: 20px 5%;">
+
+        <!-- Standalone banner (shown if child is not linked to a parent) -->
+        <div id="standalone-banner" role="alert">
+            🔗 You're not linked to a parent yet.
+            <a href="parent.html" style="color:#E65100; font-weight:bold;">Link now →</a>
+        </div>
+
+        <!-- ── Header ── -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; flex-wrap:wrap; gap:15px;">
+            <div>
+                <p style="color:#FFB7B2; font-weight:bold; margin:0;" id="greeting-text">Good day 👋</p>
+                <h1 style="color:#FF8A8A; margin:0; font-size:2.5rem;" id="hero-name">Loading...</h1>
+            </div>
+            <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
+                <!-- More dropdown -->
+                <div class="dropdown">
+                    <button class="btn" style="background:#fff; padding:10px 20px; border-radius:20px; border:1px solid #ccc;" aria-label="More options">More ▾</button>
+                    <div class="dropdown-content">
+                        <a href="journal.html"> My Growth Journey</a>
+                        <a href="heroprof.html"> My Hero Powers</a>
+                        <a href="badges.html"> My Badges &amp; Level</a>
+                        <a href="history.html"> History</a>
+                        <a href="parent.html"> Link to Parent</a>
+                        <a href="setting.html"> Edit Settings</a>
+                        <a href="#" onclick="logout('child_login.html')"> Logout</a>
+                    </div>
+                </div>
+                <!-- Avatar — shows the emoji chosen by the child (characterType from API) -->
+                <div style="width:70px; height:70px; background:#FFB7B2; border-radius:25px; display:flex; align-items:center; justify-content:center; font-size:2.4rem; border:4px solid #fff; position:relative;">
+                    <span id="avatar-initial">🌱</span>
+                    <span id="level-badge" style="position:absolute; bottom:-10px; right:-10px; background:#FFD97D; color:#333; font-size:12px; padding:2px 8px; border-radius:10px;">Lv.1</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Hero card + badges ── -->
+        <div class="dashboard-card" style="background:#FFF0F3; padding:20px; border-radius:30px; margin-bottom:25px; cursor:pointer;" onclick="location.href='heroprof.html'" role="button" aria-label="Go to hero profile">
+            <div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap;">
+                <img src="https://cdn-icons-png.flaticon.com/512/628/628283.png" width="100" alt="Leafy the plant buddy" loading="lazy">
+                <div style="flex:1;">
+                    <h3 style="color:#FF8A8A; margin:0 0 5px;">What do you want to tell Leafy about today?</h3>
+                    <p style="color:#666; margin:0;">Leafy keeps secrets, you can trust him. 🤫</p>
+                    <div style="margin-top:15px;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:6px;">
+                            <span style="font-weight:bold; color:#FF8A8A;">🏅 MY BADGES</span>
+                            <span id="leafy-lv-title" style="font-size:.72rem;font-weight:700;color:#7a5000;
+                                  background:#FFD97D;padding:2px 10px;border-radius:12px;"></span>
+                        </div>
+                        <div id="badges-row" aria-label="My earned and locked badges">
+                            <div class="badge-orb skeleton" style="width:48px;height:48px;border-radius:50%;flex-shrink:0;background:#eee;"></div>
+                            <div class="badge-orb skeleton" style="width:48px;height:48px;border-radius:50%;flex-shrink:0;background:#eee;"></div>
+                            <div class="badge-orb skeleton" style="width:48px;height:48px;border-radius:50%;flex-shrink:0;background:#eee;"></div>
+                        </div>
+                        <div id="badge-suggestion"></div>
+
+                        <!-- ── Level Progress Mini-Widget (Spec: required_badges + min_trust_score) ── -->
+                        <div id="level-progress-widget" style="
+                            margin-top:14px; padding:10px 14px;
+                            background:linear-gradient(135deg,#fff8e1,#fff3cd);
+                            border-radius:14px; border:1.5px solid #FFD97D;">
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+                                <span id="lw-level-name" style="font-size:.8rem;font-weight:700;color:#7a5000;">🌱 Level 1 — Sprout</span>
+                                <span id="lw-badge-count" style="font-size:.72rem;color:#888;font-weight:600;">0 badges</span>
+                            </div>
+                            <div style="height:7px;background:#ffe082;border-radius:4px;overflow:hidden;">
+                                <div id="lw-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#a8e063,#56ab2f);border-radius:4px;transition:width .8s;"></div>
+                            </div>
+                            <div id="lw-requirement" style="font-size:.66rem;color:#aaa;margin-top:4px;"></div>
+                        </div>
+
+                        <a href="badges.html" style="display:inline-block;margin-top:8px;font-size:.75rem;
+                           font-weight:700;color:#4DB6AC;text-decoration:none;">See all badges →</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Leafy's smart tip ── -->
+        <div id="leafy-tip-box" style="background:#E0F7F9; padding:15px 25px; border-radius:30px; margin-bottom:16px; display:flex; align-items:center; gap:15px; border:1px solid #B2EBF2; flex-wrap:wrap;" role="complementary" aria-label="Leafy's daily tip">
+            <span style="font-size:2rem;" aria-hidden="true">✨</span>
+            <div style="flex:1; min-width:0;">
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:3px;">
+                    <strong style="color:#00838F;">Leafy's Tip! 🌿</strong>
+                    <span id="leafy-tip-side-badge" style="display:none; background:#00838F; color:#fff; font-size:0.65rem; font-weight:700; padding:2px 9px; border-radius:20px; text-transform:uppercase; letter-spacing:0.5px;"></span>
+                </div>
+                <small id="leafy-tip-text" style="color:#555;">Loading tip...</small>
+            </div>
+        </div>
+
+        <!-- ── PHASE 12: Leafy's AI Alert (only shown when the AI's leafy-recommendation includes one) ── -->
+        <div id="leafy-ai-alert-box" style="display:none; background:#FDECEA; padding:13px 22px; border-radius:28px; margin-bottom:16px; align-items:center; gap:12px; border:1px solid #f5c6c4; flex-wrap:wrap;" role="alert" aria-label="Leafy's alert">
+            <span style="font-size:1.6rem;" aria-hidden="true">⚠️</span>
+            <div style="flex:1; min-width:0;">
+                <strong style="color:#c0392b;">Heads up!</strong>
+                <small id="leafy-ai-alert-text" style="color:#555; display:block;"></small>
+            </div>
+        </div>
+
+        <!-- ── Motivation banner ── -->
+        <div id="motivation-box" style="background:#FFF8E1; padding:14px 22px; border-radius:28px; margin-bottom:25px; display:flex; align-items:center; gap:14px; border:1px solid #FFE082; flex-wrap:wrap;" role="complementary" aria-label="Your motivation">
+            <span style="font-size:1.8rem;" aria-hidden="true">🔥</span>
+            <div style="flex:1; min-width:0;">
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:3px;">
+                    <strong style="color:#F57F17;">Your Motivation 💪</strong>
+                    <span id="motivation-basis-badge" style="display:none; font-size:0.65rem; font-weight:700; padding:2px 9px; border-radius:20px; text-transform:uppercase; letter-spacing:0.5px;"></span>
+                </div>
+                <small id="motivation-text" style="color:#555;">Loading motivation...</small>
+            </div>
+        </div>
+
+        <!-- ── Daily Journal card + Daily Question card ── -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:25px; margin-bottom:25px;">
+
+            <!-- Daily Journal preview (dynamic) -->
+            <div id="journal-card" class="dashboard-card" onclick="location.href='journal.html'" style="cursor:pointer; background:#fff; padding:20px; border-radius:30px; border:3px solid #FFCDD2; position:relative;" role="button" aria-label="Open daily journal">
+                <!-- Header row -->
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div style="width:52px; height:52px; background:#FFD97D; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.6rem; flex-shrink:0;">📝</div>
+                        <div>
+                            <h3 style="color:#FF8A8A; margin:0; font-size:1.15rem;">Daily Journal</h3>
+                            <p id="journal-sections-label" style="margin:2px 0 0 0; color:#888; font-size:0.82rem;">Loading...</p>
+                        </div>
+                    </div>
+                    <span style="color:#ccc; font-size:1.4rem;">›</span>
+                </div>
+
+                <!-- Progress bar -->
+                <div style="height:8px; background:#F5F5F5; border-radius:10px; margin:10px 0 14px 0; overflow:hidden;">
+                    <div id="journal-progress-bar" style="height:100%; background:#FFD97D; border-radius:10px; transition:width 0.5s ease; width:0%;"></div>
+                </div>
+
+                <!-- Pending notices -->
+                <div id="journal-pending-list" style="margin-bottom:12px;"></div>
+
+                <!-- Section pills grid (2 cols x 4 rows) -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                    <div id="jpill-spiritual" class="jpill jpill-pending"> Connected with Allah</div>
+                    <div id="jpill-social"    class="jpill jpill-pending"> Social time</div>
+                    <div id="jpill-homework"  class="jpill jpill-pending"> Homework</div>
+                    <div id="jpill-family"    class="jpill jpill-pending"> Helped family</div>
+                    <div id="jpill-nutrition" class="jpill jpill-pending"> Nutrition</div>
+                    <div id="jpill-movement"  class="jpill jpill-pending"> Movement</div>
+                    <div id="jpill-hobbies"   class="jpill jpill-pending"> Hobbies</div>
+                    <div id="jpill-mood"      class="jpill jpill-pending"> Mood</div>
+                </div>
+
+                <p style="text-align:center; margin-top:14px; margin-bottom:0; color:#4DB6AC; font-size:0.82rem; font-weight:600;">Click anywhere to open full journal →</p>
+            </div>
+
+            <!-- Write to Leafy — chat -->
+            <div class="dashboard-card" style="background:#fff; padding:20px; border-radius:30px; border:1px solid #eee;">
+                <h3 style="color:#FF8A8A; margin-top:0;">🌱 Chat with Leafy</h3>
+                <div id="leafy-chat-messages" style="max-height:140px; overflow-y:auto; background:#F9FFF9; border-radius:16px; padding:12px; margin-bottom:10px; font-size:0.9rem; color:#555; min-height:48px;">
+                    <em style="color:#aaa;">Tell Leafy about your day…</em>
+                </div>
+                <textarea
+                    id="leafy-chat-input"
+                    placeholder="Type a message to Leafy..."
+                    aria-label="Message to Leafy"
+                    style="width:100%; height:70px; border-radius:20px; border:2px solid #F5F5F5; padding:15px; margin-bottom:10px; font-family:inherit; box-sizing:border-box; resize:vertical; outline:none;"
+                ></textarea>
+                <button id="leafy-chat-send-btn" class="btn btn-yellow" style="width:100%; border:none; padding:12px; border-radius:20px; font-weight:bold; cursor:pointer; font-size:1rem;">
+                    🚀 Send to Leafy
+                </button>
+            </div>
+        </div>
+
+        <!-- ── Progress section ── -->
+        <div class="dashboard-card" style="margin-top:25px; background:#fff; padding:20px; border-radius:30px; border:1px solid #eee;">
+            <div style="margin-bottom:14px;">
+                <h2 style="color:#FF8A8A; margin:0;"> My Progress</h2>
+            </div>
+
+            <div class="progress-section">
+                <!-- TRAIT: Spiritual -->
+                <div class="progress-item">
+                    <div class="badge-circle" title="Spiritual">🕋</div>
+                    <p style="margin:0; font-size:0.85rem;">Spiritual</p>
+                    <div class="progress-bar-wrap">
+                        <div class="progress-bar-fill" id="prog-trait-spiritual" style="width:0%; background:#FF8A8A;" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <b id="pct-trait-spiritual" style="font-size:0.85rem;">0%</b>
+                </div>
+                <!-- TRAIT: Kindness -->
+                <div class="progress-item">
+                    <div class="badge-circle" title="Kindness">🤍</div>
+                    <p style="margin:0; font-size:0.85rem;">Kindness</p>
+                    <div class="progress-bar-wrap">
+                        <div class="progress-bar-fill" id="prog-trait-kindness" style="width:0%; background:#4DB6AC;" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <b id="pct-trait-kindness" style="font-size:0.85rem;">0%</b>
+                </div>
+                <!-- TRAIT: Curiosity -->
+                <div class="progress-item">
+                    <div class="badge-circle" title="Curiosity">📖</div>
+                    <p style="margin:0; font-size:0.85rem;">Curiosity</p>
+                    <div class="progress-bar-wrap">
+                        <div class="progress-bar-fill" id="prog-trait-curiosity" style="width:0%; background:#64B5F6;" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <b id="pct-trait-curiosity" style="font-size:0.85rem;">0%</b>
+                </div>
+                <!-- TRAIT: Vitality -->
+                <div class="progress-item">
+                    <div class="badge-circle" title="Vitality">🍎</div>
+                    <p style="margin:0; font-size:0.85rem;">Vitality</p>
+                    <div class="progress-bar-wrap">
+                        <div class="progress-bar-fill" id="prog-trait-vitality" style="width:0%; background:#81C784;" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <b id="pct-trait-vitality" style="font-size:0.85rem;">0%</b>
+                </div>
+                <!-- TRAIT: Resilience -->
+                <div class="progress-item">
+                    <div class="badge-circle" title="Resilience">🛡️</div>
+                    <p style="margin:0; font-size:0.85rem;">Resilience</p>
+                    <div class="progress-bar-wrap">
+                        <div class="progress-bar-fill" id="prog-trait-resilience" style="width:0%; background:#BA68C8;" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <b id="pct-trait-resilience" style="font-size:0.85rem;">0%</b>
+                </div>
+            </div>
+
+            <!-- Spiritual alert: only shown when spiritual score < 50 -->
+            <div id="spiritual-alert" role="alert">
+                <span style="font-size:2rem;" aria-hidden="true"></span>
+                <div>
+                    <strong style="color:#D32F2F;">Spiritual Score is below 50%</strong><br>
+                    <small>Your Inner Light needs care! Keep up your daily spiritual activities.</small>
+                </div>
+            </div>
+
+            <h3 style="color:#558b8f; margin:18px 0 10px; font-size:0.95rem;">📊 8 Life Pillars (Final %)</h3>
+            <div id="pillar-progress-grid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:10px;"></div>
+        </div>
+
+        <!-- Illness avoidance tip (AI) -->
+        <div id="illness-tip-card" style="display:none; background:#FFF3E0; padding:16px 20px; border-radius:24px; margin-top:12px; border:1px solid #FFE0B2;">
+            <h3 style="margin:0 0 8px; font-size:.9rem; color:#E65100;">🤒 Health Tip from Leafy</h3>
+            <p id="illness-tip-text" style="margin:0; font-size:.88rem; color:#555;"></p>
+        </div>
+
+        <!-- ── Sentiment & Emotion Safety card ── -->
+        <div id="sentiment-card" style="display:none; background:#fff; padding:16px 20px; border-radius:24px; margin-top:12px; border:1px solid #eee;">
+            <h3 style="margin:0 0 10px; font-size:.9rem; color:#555;">🧠 Latest Mood Analysis</h3>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                    <span style="font-size:.72rem;color:#888;font-weight:600;">SENTIMENT</span>
+                    <div id="sentiment-bar-wrap" style="width:100px;height:10px;background:#eee;border-radius:6px;overflow:hidden;">
+                        <div id="sentiment-bar" style="height:100%;width:50%;background:#4DB6AC;border-radius:6px;transition:width .4s;"></div>
+                    </div>
+                    <span id="sentiment-label" style="font-size:.78rem;font-weight:700;color:#4DB6AC;">Neutral</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:160px;">
+                    <span id="emotion-label" style="font-size:.82rem;font-weight:700;color:#555;">😶 –</span>
+                    <div id="anomaly-flag-badge" style="display:none;background:#FDECEA;color:#c0392b;border-radius:16px;padding:3px 10px;font-size:.72rem;font-weight:700;width:fit-content;">⚠️ Possible inconsistency detected</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Personality Cluster card ── -->
+        <div id="cluster-card" style="display:none; background:linear-gradient(135deg,#f0f4ff,#e8f5e9); padding:16px 20px; border-radius:24px; margin-top:12px; border:1px solid #d0e8d0;">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:1.8rem;">🌟</span>
+                <div>
+                    <div style="font-size:.72rem;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:.5px;">Personality Type</div>
+                    <div id="cluster-name" style="font-size:1rem;font-weight:700;color:#2e7d32;">–</div>
+                    <div id="cluster-traits" style="font-size:.75rem;color:#555;margin-top:2px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Recommended Badge card ── -->
+        <div id="recommended-badge-card" style="display:none; background:#fffde7; padding:16px 20px; border-radius:24px; margin-top:12px; border:1px solid #ffe082;">
+            <div style="font-size:.72rem;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">🏅 Recommended Next Badge</div>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span id="rec-badge-icon" style="font-size:1.8rem;">🏅</span>
+                <div>
+                    <div id="rec-badge-name" style="font-size:.92rem;font-weight:700;color:#5d4037;"></div>
+                    <div id="rec-badge-desc" style="font-size:.75rem;color:#777;"></div>
+                    <div style="font-size:.7rem;color:#999;font-style:italic;margin-top:2px;">Complete challenges to earn this — it won't unlock automatically</div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ── Message parent card ── -->
+        <!-- ── Parent Tasks Card ── -->
+        <div class="dashboard-card" id="parent-tasks-card" style="background:#FFF8E1; padding:20px; border-radius:30px; margin-top:25px; display:none;">
+            <h3 style="color:#F57F17; margin-top:0;">🎯 My Tasks from Parent</h3>
+            <div id="tasks-list" style="display:flex; flex-direction:column; gap:10px;">
+                <p style="color:#aaa; font-size:13px;">Loading tasks…</p>
+            </div>
+        </div>
+
+        <div class="dashboard-card" id="message-parent-card" style="background:#E0F2F1; padding:20px; border-radius:30px; margin-top:25px;">
+            <h3 style="color:#00796B; margin-top:0;">💬 Message Parent</h3>
+            <!-- Quick preset buttons -->
+            <div style="display:flex; gap:10px; margin:15px 0; flex-wrap:wrap;">
+                <button class="btn quick-msg-btn" data-msg="❤️ I love you!" style="background:#fff; font-size:12px; border:1px solid #eee; padding:8px 15px; border-radius:15px; cursor:pointer;">❤️ I love you!</button>
+                <button class="btn quick-msg-btn" data-msg="🎉 It was a great day!" style="background:#fff; font-size:12px; border:1px solid #eee; padding:8px 15px; border-radius:15px; cursor:pointer;">🎉 Great day!</button>
+                <button class="btn quick-msg-btn" data-msg="🤗 I miss you!" style="background:#fff; font-size:12px; border:1px solid #eee; padding:8px 15px; border-radius:15px; cursor:pointer;">🤗 Miss you!</button>
+            </div>
+            <textarea
+                id="parent-msg-input"
+                placeholder="Write your own message here..."
+                aria-label="Message to parent"
+                style="width:100%; border-radius:20px; border:1px solid #eee; padding:15px; box-sizing:border-box; resize:vertical; min-height:80px; font-family:inherit; outline:none; transition:border-color 0.2s;"
+                onfocus="this.style.borderColor='#4DB6AC'" onblur="this.style.borderColor='#eee'"
+            ></textarea>
+            <button id="send-msg-btn" class="btn btn-pink" style="width:100%; margin-top:10px; color:white; border:none; padding:12px; border-radius:20px; font-weight:bold; cursor:pointer; font-size:1rem;">
+                 Send Message
+            </button>
+            <!-- Warning shown when standalone (no parent link) -->
+            <p id="standalone-msg-warning" style="display:none; color:#E65100; font-size:13px; margin-top:8px; text-align:center;">
+                ⚠️ You need to link to a parent before sending messages.
+                <a href="parent.html" style="color:#E65100; font-weight:bold;">Link now →</a>
+            </p>
+        </div>
+
+        <!-- ── Journey preview ── -->
+        <div class="dashboard-card" style="background:#e8f8f0; padding:16px 16px 14px; border-radius:24px; border:1px solid #c8ead8; margin-top:25px; margin-bottom:50px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                <span style="font-size:1.1rem;">🌿</span>
+                <h3 style="color:#e6536f; margin:0; font-size:1.05rem;">My Journey</h3>
+            </div>
+            <div class="journey-preview-wrap">
+                <div class="journey-path" id="journey-path">
+                    <!-- Populated dynamically by loadJourney() -->
+                    <div class="jn-wrap"><div class="jn-circle jn-locked skeleton" style="opacity:0.4;"></div></div>
+                    <div class="jn-wrap"><div class="jn-circle jn-locked skeleton" style="opacity:0.4;"></div></div>
+                    <div class="jn-wrap"><div class="jn-circle jn-locked skeleton" style="opacity:0.4;"></div></div>
+                    <div class="jn-wrap"><div class="jn-circle jn-locked skeleton" style="opacity:0.4;"></div></div>
+                    <div class="jn-wrap"><div class="jn-circle jn-locked skeleton" style="opacity:0.4;"></div></div>
+                </div>
+            </div>
+            <p id="journey-summary" style="text-align:center; font-weight:bold; color:#4DB6AC; font-size:.88rem; margin-top:4px; cursor:pointer;" onclick="location.href='journey.html'">Tap to see full journey →</p>
+        </div>
+
+    </section><!-- /dashboard-page -->
+
+    <!-- ═══════════════════════════════════════════════════════════
+         FOOTER
+    ═══════════════════════════════════════════════════════════ -->
+    <footer class="global-footer">
+        <div class="footer-col">
+            <h3>🌱 About Us</h3>
+            <p style="max-width:250px; line-height:1.5; color:#666;">Growia was built to make growing up an adventure with your buddy "Leafy".</p>
+        </div>
+        <div class="footer-col">
+            <h3>🔗 Quick Links</h3>
+            <ul>
+                <li><a href="#">Privacy Policy</a></li>
+                <li><a href="#">Terms of Use</a></li>
+                <li><a href="#">FAQ</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h3>💌 Contact</h3>
+            <button class="btn btn-yellow" onclick="showToast('📬 Thanks for reaching out! We\'ll be in touch soon.')">Say Hello 👋</button>
+        </div>
+    </footer>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SCRIPTS
+         script.js MUST come first — it defines:
+           API_BASE_URL, childAuthFetch(), childAuthFetch(), getChildToken(),
+           clearChildToken(), logout(), showToast, etc.
+    ═══════════════════════════════════════════════════════════ -->
+    <script src="script.js"></script>
+
+    <script>
+    
+
+    'use strict';
+
+    /* ── 0. Synchronous auth guard ─────────────────────────────── */
+    // Bounce immediately — no flicker, no async race.
+    requireChildAuth('child_login.html');
+
+    /* ── 1. Utility helpers ────────────────────────────────────── */
+
+    /**
+     * showToast — display a brief non-blocking notification.
+     * @param {string}  msg      Text to display.
+     * @param {number}  duration Milliseconds before auto-hide (default 2800).
+     */
+    function showToast(msg, duration = 2800) {
+        const t = document.getElementById('toast');
+        if (!t) return;
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), duration);
+    }
+
+    /**
+     * getGreeting — returns a time-sensitive greeting string.
+     */
+    function getGreeting() {
+        const h = new Date().getHours();
+        if (h < 12) return 'Good morning 🌅';
+        if (h < 17) return 'Good afternoon ☀️';
+        return 'Good evening 🌙';
+    }
+
+    // NOTE (cleanup): setProgress(key, rawPct) — which wrote to #prog-${key} /
+    // #pct-${key} — was removed here. Those element IDs (prog-spiritual,
+    // prog-social, prog-academic, prog-physical, prog-mental, prog-creativity,
+    // prog-env, prog-resilience) do not exist anywhere in this page's HTML, and
+    // its only caller, switchPillarView(), has also been removed (see note near
+    // updateTraitsPanel below). It was dead code with no rendering target.
+
+    /**
+     * setTraitBar — update a TRAIT progress bar + percentage label.
+     * Uses dedicated IDs (prog-trait-xxx / pct-trait-xxx) to avoid
+     * colliding with the 8-pillar bars that use prog-xxx / pct-xxx.
+     * @param {string} key     One of: spiritual | kindness | curiosity | vitality | resilience
+     * @param {number} rawPct  0–100 float from TraitSynthesisEngine (via API).
+     */
+    function setTraitBar(key, rawPct) {
+        const pct  = Math.min(100, Math.max(0, Math.round(rawPct || 0)));
+        const bar  = document.getElementById(`prog-trait-${key}`);
+        const text = document.getElementById(`pct-trait-${key}`);
+        if (bar) {
+            bar.style.width = `${pct}%`;
+            bar.setAttribute('aria-valuenow', pct);
+        }
+        if (text) text.textContent = `${pct}%`;
+    }
+
+    /**
+     * updateTraitsPanel — populate the 5 Core Personality Trait bars
+     * from the synthesised trait scores returned by the API
+     * (kindnessTrait, vitalityTrait, curiosityTrait, resilienceTrait, spiritualTrait).
+     *
+     * These are computed by TraitSynthesisEngine (backend) from the 8 Final
+     * Hybrid Pillars (ChildProfile.FinalXxx_Pct) and are distinct from the
+     * raw pillar percentages — there is no pillar-value fallback here; a
+     * missing trait simply shows 0, it never silently falls back to showing
+     * a pillar number in its place.
+     *
+     * Mapping (kept in sync with Services/TraitSynthesisEngine.cs — see that
+     * file for the authoritative formulas; FIX: this comment previously
+     * described an older, different formula set that no longer matched the
+     * backend at all):
+     *   Spiritual  → profile.spiritualTrait   (FinalSpiritualConnection × 0.80 + FinalMentalWellbeing × 0.20)                                   [cap 100]
+     *   Kindness   → profile.kindnessTrait    (FinalMentalWellbeing × 0.91 + FinalSocialInteraction × 0.09 + sentimentBoost × 0.09)              [cap 90]
+     *   Curiosity  → profile.curiosityTrait   (FinalAcademicProgress × 0.60 + FinalCreativityEngagement × 0.40)                                  [cap 100]
+     *   Vitality   → profile.vitalityTrait    (FinalPhysicalHealth × 0.57 + FinalPhysicalActivity × 0.43)                                        [cap 100]
+     *   Resilience → profile.resilienceTrait  (FinalMentalWellbeing × 0.52 + sentiment × 0.18 + Social × 0.10 + Chores × 0.10 + Nutrition × 0.05 + Sport × 0.05) [cap 65]
+     * All five additionally take an anomalyFlag penalty at the end.
+     *
+     * NOTE on AI weight (transparency): FinalMentalWellbeing_Pct — which feeds
+     * Kindness, Resilience, and Spiritual above — is not purely child-reported.
+     * Its Structured input is itself 60% AI SentimentScore (+ 25% mood emoji
+     * + 15% challenge-handling), on top of the usual 30% NLP share every
+     * Final pillar carries. This is intentional in the hybrid design, not a
+     * bug — flagged here so the AI-heaviness of these three traits is clear.
+     *
+     * @param {Object} profile  The child profile object from /Children/profile.
+     */
+    function updateTraitsPanel(profile) {
+        setTraitBar('spiritual',  profile.spiritualTrait  ?? 0);
+        setTraitBar('kindness',   profile.kindnessTrait   ?? 0);
+        setTraitBar('curiosity',  profile.curiosityTrait  ?? 0);
+        setTraitBar('vitality',   profile.vitalityTrait   ?? 0);
+        setTraitBar('resilience', profile.resilienceTrait ?? 0);
+    }
+
+    const PILLAR_META = [
+        { key: 'spiritual', apiKey: 'spiritual', label: 'Religious', emoji: '🕌' },
+        { key: 'social', apiKey: 'social', label: 'Social', emoji: '🧑‍🤝‍🧑' },
+        { key: 'academic', apiKey: 'academic', label: 'Academic', emoji: '📚' },
+        { key: 'environment', apiKey: 'environmental', label: 'Chores', emoji: '🏠' },
+        { key: 'nutrition', apiKey: 'physicalHealth', label: 'Nutrition', emoji: '🥗' },
+        { key: 'sport', apiKey: 'physicalActivity', label: 'Physical', emoji: '🏃' },
+        { key: 'hobbies', apiKey: 'creativity', label: 'Hobbies', emoji: '🎨' },
+        { key: 'mental', apiKey: 'mental', label: 'Mental', emoji: '🧠' }
+    ];
+
+    function updatePillarsPanel(finalPillars) {
+        const grid = document.getElementById('pillar-progress-grid');
+        if (!grid || !finalPillars) return;
+        grid.innerHTML = PILLAR_META.map(p => {
+            const score = Math.round(finalPillars[p.apiKey] ?? 0);
+            return `<div style="background:#f8fffe;border-radius:14px;padding:10px;text-align:center;border:1px solid #e0f2f1;">
+                <div style="font-size:1.2rem;">${p.emoji}</div>
+                <div style="font-size:.72rem;font-weight:700;color:#555;">${p.label}</div>
+                <div style="height:6px;background:#eee;border-radius:6px;margin:6px 0;overflow:hidden;">
+                    <div style="height:100%;width:${score}%;background:#4DB6AC;border-radius:6px;"></div>
+                </div>
+                <strong style="font-size:.8rem;color:#00796B;">${score}%</strong>
+            </div>`;
+        }).join('');
+    }
+
+    async function loadPillarsPanel() {
+        try {
+            const res = await childAuthFetch('/Children/pillar-detail');
+            if (!res || !res.ok) return;
+            const data = await res.json();
+            updatePillarsPanel(data.final || data.Final);
+        } catch (e) { console.warn('loadPillarsPanel:', e); }
+    }
+
+    async function loadLeafyChat() {
+        try {
+            const res = await childAuthFetch('/Children/leafy-chat');
+            if (!res || !res.ok) return;
+            const data = await res.json();
+            renderLeafyChat(data.messages || []);
+        } catch (e) { console.warn('loadLeafyChat:', e); }
+    }
+
+    function renderLeafyChat(messages) {
+        const box = document.getElementById('leafy-chat-messages');
+        if (!box) return;
+        if (!messages.length) {
+            box.innerHTML = '<em style="color:#aaa;">Tell Leafy about your day…</em>';
+            return;
+        }
+        box.innerHTML = messages.map(m => `<div style="margin-bottom:6px;"><strong>You:</strong> ${escapeHtml(m)}</div>`).join('');
+        box.scrollTop = box.scrollHeight;
+    }
+
+    function wireLeafyChat() {
+        const btn = document.getElementById('leafy-chat-send-btn');
+        const input = document.getElementById('leafy-chat-input');
+        if (!btn || !input) return;
+        btn.addEventListener('click', async () => {
+            const msg = input.value.trim();
+            if (!msg) return;
+            btn.disabled = true;
+            try {
+                const res = await childAuthFetch('/Children/leafy-chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: msg })
+                });
+                if (res && res.ok) {
+                    input.value = '';
+                    await loadLeafyChat();
+                }
+            } finally { btn.disabled = false; }
+        });
+    }
+
+    /* ── 2. Page initialisation ─────────────────────────────────── */
+    document.addEventListener('DOMContentLoaded', async function () {
+
+        // Set greeting immediately (no async needed)
+        const greetEl = document.getElementById('greeting-text');
+        if (greetEl) greetEl.textContent = getGreeting();
+
+        // Fire all independent data loaders in parallel for best perceived performance.
+        // Promise.allSettled ensures one failure does not block the others.
+        await Promise.allSettled([
+            loadProfile(),
+            loadSmartTip(),
+            loadMotivation(),
+            loadDailyQuestion(),
+            loadMyBadges(),
+            loadJourney(),
+            loadTasks(),
+            loadJournalPreview(),
+            loadLevelWidget(),
+            loadSentimentCard(),
+            loadPillarsPanel(),
+            loadLeafyChat()
+        ]);
+
+        wireQuickMessages();
+        wireLeafyChat();
+        wireSendMessage();
+    });
+
+    /* ── 3. loadProfile ─────────────────────────────────────────── */
+    /**
+     * Fetches GET /api/Children/profile and populates:
+     *   - Child's display name + avatar initial
+     *   - Level badge
+     *   - Standalone banner / messaging warning
+     *   - All five progress bars (spiritual, social, academic, physical, mental)
+     *   - Spiritual alert if spiritual score < 50
+     */
+    async function loadProfile() {
+        const res = await childAuthFetch('/Children/profile');
+        if (!res) return; // 401/403 already handled by childAuthFetch → redirect
+
+        if (!res.ok) {
+            console.warn('[leafy] loadProfile failed:', res.status, res.statusText);
+            document.getElementById('hero-name').textContent = 'Hello, Hero!';
+            return;
+        }
+
+        let profile;
+        try {
+            profile = await res.json();
+        } catch {
+            console.error('[leafy] loadProfile: invalid JSON response');
+            return;
+        }
+
+        /* ── Name + avatar ── */
+        const fullName = (profile.fullName || '').trim() || 'Hero';
+        const nameEl   = document.getElementById('hero-name');
+        const initEl   = document.getElementById('avatar-initial');
+        const lvlEl    = document.getElementById('level-badge');
+
+        if (nameEl)  nameEl.textContent  = fullName;
+        if (initEl)  initEl.textContent  = profile.characterType || fullName.charAt(0).toUpperCase();
+        if (lvlEl)   lvlEl.textContent   = `Lv.${profile.level || 1}`;
+
+        // Level title pill next to MY BADGES
+        const lvTitleEl = document.getElementById('leafy-lv-title');
+        if (lvTitleEl && profile.level) {
+            const lv = profile.level;
+            const title = lv >= 20 ? 'Legendary Hero'
+                        : lv >= 10 ? 'Expert Explorer'
+                        : lv >= 5  ? 'Budding Explorer'
+                        : 'Sprout Adventurer';
+            lvTitleEl.textContent = `Lv.${lv} – ${title}`;
+        }
+
+        /* ── Standalone guard ── */
+        if (profile.isStandalone) {
+            const banner  = document.getElementById('standalone-banner');
+            const warning = document.getElementById('standalone-msg-warning');
+            const sendBtn = document.getElementById('send-msg-btn');
+
+            if (banner)  banner.style.display  = 'block';
+            if (warning) warning.style.display  = 'block';
+            if (sendBtn) {
+                sendBtn.disabled = true;
+                sendBtn.title    = 'Link to a parent first to send messages';
+            }
+        }
+
+        // NOTE (cleanup): a dead window._pillarSets / switchPillarView('final')
+        // block used to live here. It built a "pillar" object whose `resilience`
+        // key fell back from profile.resilienceTrait to a raw pillar value
+        // (finalMentalPct / mentalPct / nlpMentalPct) — i.e. it could silently
+        // show a PILLAR number labeled as the Resilience TRAIT. Its formula
+        // comment was also stale and didn't match Services/TraitSynthesisEngine.cs
+        // at all (e.g. it claimed "Resilience → mentalPct" with no weighting).
+        // It targeted DOM IDs (prog-spiritual, prog-social, btn-final, etc.)
+        // that don't exist anywhere in this page, so it never actually
+        // rendered anything — it was dead code. Removed rather than rewired,
+        // since the 5-trait panel below (updateTraitsPanel) already covers
+        // Resilience correctly with no pillar fallback.
+
+        // ── Phase 13 FIX: populate the 5 Core Personality Trait bars ──
+        // These use profile.kindnessTrait / vitalityTrait / etc. (TraitSynthesisEngine output)
+        // and write to IDs prog-trait-xxx / pct-trait-xxx.
+        updateTraitsPanel(profile);
+
+        if (profile.illnessAvoidanceTip) {
+            const card = document.getElementById('illness-tip-card');
+            const txt = document.getElementById('illness-tip-text');
+            if (card && txt) {
+                txt.textContent = profile.illnessAvoidanceTip;
+                card.style.display = '';
+            }
+        }
+
+
+        /* ── Personality Cluster ── */
+        if (profile.personalityClusterName) {
+            const clCard  = document.getElementById('cluster-card');
+            const clName  = document.getElementById('cluster-name');
+            const clTraits = document.getElementById('cluster-traits');
+            if (clCard)  clCard.style.display  = 'block';
+            if (clName)  clName.textContent    = profile.personalityClusterName;
+            if (clTraits && profile.personalityClusterDominantTraits)
+                clTraits.textContent = profile.personalityClusterDominantTraits;
+        }
+
+        /* ── Recommended Badge ── */
+        if (profile.recommendedBadgeId) {
+            try {
+                const rbRes = await childAuthFetch('/BadgeLevel/badges/recommended');
+                if (rbRes && rbRes.ok) {
+                    const rbData = await rbRes.json();
+                    if (rbData.hasRecommendation && !rbData.alreadyUnlocked) {
+                        const card = document.getElementById('recommended-badge-card');
+                        const icon = document.getElementById('rec-badge-icon');
+                        const name = document.getElementById('rec-badge-name');
+                        const desc = document.getElementById('rec-badge-desc');
+                        if (card) card.style.display = 'block';
+                        if (icon) icon.textContent = rbData.badge.icon_url || '🏅';
+                        if (name) name.textContent  = rbData.badge.badge_name;
+                        if (desc) desc.textContent  = rbData.badge.description;
+                    }
+                }
+            } catch (e) { console.warn('[leafy] recommended badge fetch error:', e); }
+        }
+
+        /* ── Spiritual alert ── */
+        const spiritualFinal = profile.finalSpiritualPct ?? profile.religiousPct ?? 0;
+        if (spiritualFinal < 50) {
+            const alertEl = document.getElementById('spiritual-alert');
+            if (alertEl) alertEl.style.display = 'flex';
+        }
+
+        /* ── Leafy AI Alert (from profile cache) ── */
+        if (profile.leafyAlertText) {
+            const alertBox  = document.getElementById('leafy-ai-alert-box');
+            const alertText = document.getElementById('leafy-ai-alert-text');
+            if (alertBox && alertText) {
+                alertText.textContent = profile.leafyAlertText;
+                alertBox.style.display = 'flex';
+            }
+        }
+    }
+
+    /**
+     * loadSentimentCard — loads latest sentiment/emotion from pillar-detail.
+     */
+    async function loadSentimentCard() {
+        try {
+            const res = await childAuthFetch('/Children/pillar-detail');
+            if (!res || !res.ok) return;
+            const data = await res.json();
+            const es = data.emotionSafety;
+            if (!es) return;
+
+            const card = document.getElementById('sentiment-card');
+            if (card && (es.sentimentScore != null || es.detectedEmotion)) {
+                card.style.display = 'block';
+
+                // Sentiment bar: score is -1..+1, map to 0..100%
+                const score   = es.sentimentScore ?? 0;
+                const pct     = Math.round((score + 1) / 2 * 100);
+                const barEl   = document.getElementById('sentiment-bar');
+                const lblEl   = document.getElementById('sentiment-label');
+                if (barEl) {
+                    barEl.style.width      = `${pct}%`;
+                    barEl.style.background = score < -0.2 ? '#ef5350' : score > 0.2 ? '#4CAF50' : '#FFA726';
+                }
+                if (lblEl) {
+                    lblEl.textContent = score < -0.3 ? '😟 Negative'
+                                      : score > 0.3  ? '😊 Positive'
+                                      :                '😐 Neutral';
+                    lblEl.style.color = score < -0.3 ? '#ef5350' : score > 0.3 ? '#4CAF50' : '#FFA726';
+                }
+
+                // Emotion label
+                const emEl = document.getElementById('emotion-label');
+                if (emEl && es.detectedEmotion) emEl.textContent = `😶 ${es.detectedEmotion}`;
+
+                // Anomaly flag
+                if (es.anomalyFlag) {
+                    const af = document.getElementById('anomaly-flag-badge');
+                    if (af) af.style.display = 'block';
+                }
+            }
+        } catch (e) { console.warn('[leafy] sentiment card error:', e); }
+    }
+
+    async function loadSmartTip() {
+        // PHASE 12 — prefer the AI team's daily Leafy Recommendation
+        // (source of truth). /Children/leafy-recommendation already falls
+        // back internally to the existing backend-computed smart-tip when
+        // the AI hasn't delivered one yet, so this single call covers both
+        // cases; the legacy two-step fallback below only kicks in if that
+        // endpoint itself is unreachable (e.g. network/auth error).
+        try {
+            const res = await childAuthFetch('/Children/leafy-recommendation');
+            if (res && res.ok) {
+                const data = await res.json();
+                const tipEl = document.getElementById('leafy-tip-text');
+                if (tipEl && data.tip) tipEl.textContent = data.tip;
+
+                const badgeEl = document.getElementById('leafy-tip-side-badge');
+                if (badgeEl && data.side) {
+                    badgeEl.textContent = data.source === 'ai' ? `✨ ${data.side}` : data.side;
+                    badgeEl.style.display = 'inline-block';
+                }
+
+                const alertBox = document.getElementById('leafy-ai-alert-box');
+                const alertText = document.getElementById('leafy-ai-alert-text');
+                if (alertBox && alertText && data.alert) {
+                    alertText.textContent = data.alert;
+                    alertBox.style.display = 'flex';
+                }
+                return;
+            }
+        } catch (err) {
+            console.warn('[leafy] leafy-recommendation error:', err);
+        }
+
+        try {
+            const res = await childAuthFetch('/Children/smart-tip');
+            if (!res || !res.ok) {
+                // Fallback: try legacy random tip endpoint
+                const fallback = await childAuthFetch('/Children/leafy-tip');
+                if (fallback && fallback.ok) {
+                    const d = await fallback.json();
+                    const el = document.getElementById('leafy-tip-text');
+                    if (el && d.tip) el.textContent = d.tip;
+                }
+                return;
+            }
+
+            const data = await res.json();
+
+            const tipEl = document.getElementById('leafy-tip-text');
+            if (tipEl && data.tip) tipEl.textContent = data.tip;
+
+            const badgeEl = document.getElementById('leafy-tip-side-badge');
+            if (badgeEl && data.side) {
+                badgeEl.textContent = data.side;
+                badgeEl.style.display = 'inline-block';
+            }
+        } catch (err) {
+            console.warn('[leafy] loadSmartTip error:', err);
+        }
+    }
+
+    async function loadMotivation() {
+        try {
+            const res = await childAuthFetch('/Children/motivation');
+            if (!res || !res.ok) return;
+
+            const data = await res.json();
+
+            const msgEl = document.getElementById('motivation-text');
+            if (msgEl && data.message) msgEl.textContent = data.message;
+
+            const badgeEl = document.getElementById('motivation-basis-badge');
+            if (badgeEl && data.basis) {
+                badgeEl.textContent = data.basis === 'Improvement' ? '📈 Improved' : '⭐ Strongest';
+                badgeEl.style.display     = 'inline-block';
+                badgeEl.style.background  = data.basis === 'Improvement' ? '#43A047' : '#F9A825';
+                badgeEl.style.color       = '#fff';
+            }
+        } catch (err) {
+            console.warn('[leafy] loadMotivation error:', err);
+        }
+    }
+
+    async function loadDailyQuestion() {
+        try {
+            const res = await childAuthFetch('/Children/daily-question');
+            if (!res || !res.ok) return;
+
+            const data   = await res.json();
+            const el     = document.getElementById('daily-question-text');
+            const btnEl  = document.getElementById('submit-answer-btn');
+
+            if (el && data.questionText) {
+                el.textContent = data.questionText;
+            }
+            // Store the question ID for submission
+            if (btnEl && data.questionId) {
+                btnEl.dataset.questionId = data.questionId;
+            }
+            // If already answered today, disable the input
+            if (data.alreadyAnswered) {
+                const input = document.getElementById('question-answer-input');
+                if (input) {
+                    input.placeholder  = 'You already answered today\'s question! 🌟';
+                    input.disabled     = true;
+                }
+                if (btnEl) {
+                    btnEl.textContent = ' Already answered today!';
+                    btnEl.disabled    = true;
+                }
+            }
+        } catch (err) {
+            console.warn('[leafy] loadDailyQuestion error:', err);
+        }
+    }
+
+    /* renderIcon — iconUrl from the API is always an inline SVG string.
+       Wraps it in the container so it renders at any size.
+       Falls back to the emoji/text passed as `fallback` when iconUrl is empty. */
+    function renderIcon(iconUrl, fallback = '🏅') {
+        if (!iconUrl) return fallback;
+        const s = iconUrl.trim();
+        if (s.startsWith('<svg')) return s;
+        if (s.startsWith('http') || s.startsWith('data:'))
+            return `<img src="${s.replace(/"/g,'&quot;')}" width="32" height="32" alt="" style="display:block;margin:0 auto;" loading="lazy">`;
+        return s || fallback;
+    }
+
+    async function loadMyBadges() {
+        const row = document.getElementById('badges-row');
+        if (!row) return;
+
+        // Skeleton placeholders while loading
+        row.innerHTML = Array(6).fill(0).map(() =>
+            `<div style="width:54px;height:54px;border-radius:50%;background:#eee;flex-shrink:0;
+                         animation:shimmer 1.2s infinite;"></div>`
+        ).join('');
+
+        try {
+            // FIX (Phase 14): /Children/pillar-badges was removed because the
+            // pillar_pct MetricType challenges it relied on don't exist in the
+            // seeded data. Use /Children/all-badges which returns every badge
+            // with IsUnlocked + live ChildChallengeProgress for locked badges.
+            const res = await childAuthFetch('/Children/all-badges');
+            if (!res || !res.ok) throw new Error('fetch failed');
+            const badges = await res.json();
+            if (!Array.isArray(badges) || badges.length === 0) {
+                row.innerHTML = '<span style="font-size:13px;color:#aaa;">No badges yet — keep journaling! 🌱</span>';
+                return;
+            }
+
+            // Show unlocked first (newest first), then first few locked ones
+            const unlocked = badges.filter(b => b.isUnlocked)
+                .sort((a, b) => new Date(b.unlockedAt) - new Date(a.unlockedAt));
+            const locked   = badges.filter(b => !b.isUnlocked).slice(0, 6);
+            const display  = [...unlocked, ...locked].slice(0, 10);
+
+            row.innerHTML = display.map(b => {
+                const isUnlocked = b.isUnlocked;
+                const bgColor    = isUnlocked ? '#4DB6AC' : '#ddd';
+                const shadow     = isUnlocked ? '#2e8b7a' : '#bbb';
+                const opacity    = isUnlocked ? '1' : '0.45';
+                const filter     = isUnlocked ? 'none' : 'grayscale(1)';
+                const label      = (b.name || 'Badge').replace(/"/g, '&quot;');
+
+                // Progress ring for locked badges: first challenge pct
+                let ringPct = 0;
+                if (!isUnlocked && Array.isArray(b.challenges) && b.challenges.length > 0) {
+                    const ch = b.challenges[0];
+                    ringPct = ch.targetValue > 0
+                        ? Math.min(100, Math.round((ch.currentValue / ch.targetValue) * 100))
+                        : 0;
+                } else if (isUnlocked) {
+                    ringPct = 100;
+                }
+
+                // Render icon: iconUrl is always an inline SVG string
+                const iconHtml = renderIcon(b.iconUrl, '🏅');
+
+                return `
+                <div class="pillar-badge-orb"
+                     style="opacity:${opacity};"
+                     data-label="${label}"
+                     data-tip="${isUnlocked ? '✅ Unlocked!' : (b.challenges&&b.challenges[0] ? b.challenges[0].description : 'Keep journaling!')}"
+                     data-tier="${isUnlocked ? '✅ Earned' : '🔒 Locked'}"
+                     data-pct="${ringPct}"
+                     title="${label}"
+                     onclick="showBadgeTip(this)">
+                    <div style="
+                        width:54px;height:54px;border-radius:50%;
+                        background: conic-gradient(
+                            ${isUnlocked ? '#4DB6AC' : '#bbb'} ${ringPct * 3.6}deg,
+                            rgba(255,255,255,.25) 0deg
+                        );
+                        display:flex;align-items:center;justify-content:center;
+                        box-shadow: 0 4px 0 ${shadow}, 0 0 0 3px rgba(255,255,255,.6);
+                        filter:${filter};
+                        cursor:pointer; transition:transform .18s;
+                        position:relative;
+                    ">
+                        <div style="
+                            width:40px;height:40px;border-radius:50%;
+                            background:${bgColor};
+                            display:flex;align-items:center;justify-content:center;
+                            font-size:1.3rem;overflow:hidden;
+                        ">${iconHtml}</div>
+                        ${isUnlocked ? '<div style="position:absolute;top:-6px;right:-4px;font-size:.65rem;">✅</div>' : ''}
+                    </div>
+                </div>`;
+            }).join('');
+
+        } catch(err) {
+            console.warn('[leafy] loadMyBadges error:', err);
+            row.innerHTML = '<span style="font-size:13px;color:#aaa;">Could not load badges.</span>';
+        }
+    }
+
+    function showBadgeTip(el) {
+        // Remove any existing popup
+        document.querySelectorAll('.badge-popup').forEach(p => p.remove());
+
+        const label = el.dataset.label;
+        const tier  = el.dataset.tier || 'Not yet unlocked';
+        const pct   = el.dataset.pct  || '0';
+        const tip   = el.dataset.tip  || '';
+
+        const popup = document.createElement('div');
+        popup.className = 'badge-popup';
+        popup.innerHTML = `
+            <strong style="color:#e6536f;">${label}</strong><br>
+            <span style="font-size:.75rem;color:#4DB6AC;font-weight:700;">
+                ${tier || '🔒 Not earned yet'}
+            </span><br>
+            <span style="font-size:.72rem;color:#666;">${pct}% progress</span><br>
+            <span style="font-size:.76rem;color:#558b8f;margin-top:4px;display:block;">${tip}</span>
+        `;
+        el.appendChild(popup);
+
+        // Auto-close after 4s or on outside click
+        setTimeout(() => popup.remove(), 4000);
+        setTimeout(() => {
+            document.addEventListener('click', function handler(e) {
+                if (!el.contains(e.target)) { popup.remove(); document.removeEventListener('click', handler); }
+            });
+        }, 100);
+    }
+    async function loadJourney() {
+        const container = document.getElementById('journey-path');
+        if (!container) return;
+
+        try {
+            const res = await childAuthFetch('/Children/journey-progress');
+
+            // If null (401/403 redirect already happened) or error → use fallback
+            if (!res || !res.ok) {
+                renderJourneyFallback(container);
+                return;
+            }
+
+            const data = await res.json();
+            renderJourneyNodes(container, data);
+        } catch (err) {
+            console.warn('[leafy] loadJourney error:', err);
+            renderJourneyFallback(container);
+        }
+    }
+     
+    // ── Zigzag offsets for the nodes (alternating up/down) ──
+    const _JN_ZIGZAG = [0, -28, 0, -28, 0, -28];
+
+    function renderJourneyNodes(container, data) {
+        let currentLevel = 1;
+        if (data && typeof data.currentLevel === 'number') currentLevel = data.currentLevel;
+        else if (data && typeof data.completedSteps === 'number') currentLevel = data.completedSteps;
+
+        // Use DB-driven level definitions if available, else fallback
+        const levelDefs = Array.isArray(data?.levelDefinitions) && data.levelDefinitions.length
+            ? data.levelDefinitions
+            : [
+                { levelNumber:1, name:'Level 1', icon:'🌱', deco:'🌸' },
+                { levelNumber:2, name:'Level 2', icon:'🌿', deco:'🌺' },
+                { levelNumber:3, name:'Level 3', icon:'🌸', deco:'🌟' },
+                { levelNumber:4, name:'Level 4', icon:'⭐', deco:'🦋' },
+                { levelNumber:5, name:'Level 5', icon:'🏆', deco:'🌈' },
+                { levelNumber:6, name:'Level 6', icon:'🌟', deco:'✨' },
+            ];
+
+        _buildZigzagPreview(container, currentLevel, data, levelDefs);
+
+        // Update summary text
+        const sumEl = document.getElementById('journey-summary');
+        if (sumEl) {
+            const done = Math.max(0, currentLevel - 1);
+            sumEl.innerHTML = `<strong style="color:#e6536f;">${done} of ${levelDefs.length - 1} levels completed!</strong> &nbsp;<span style="font-size:.8rem;color:#4DB6AC;">Tap to see full journey →</span>`;
+        }
+    }
+
+    function _buildZigzagPreview(container, currentLevel, data, levelDefs) {
+        container.innerHTML = '';
+
+        // SVG for lines
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.classList.add('journey-svg');
+        container.appendChild(svg);
+
+        levelDefs.forEach((lv, i) => {
+            const isDone   = currentLevel > (i + 1);
+            const isActive = currentLevel === (i + 1);
+            const isLocked = currentLevel < (i + 1);
+
+            const yOff = _JN_ZIGZAG[i] || 0;
+
+            const wrap = document.createElement('div');
+            wrap.className = 'jn-wrap';
+            wrap.style.transform = `translateY(${yOff}px)`;
+
+            const circle = document.createElement('div');
+            const state = isDone ? 'jn-done' : isActive ? 'jn-active' : 'jn-locked';
+            circle.className = `jn-circle ${state}`;
+            circle.innerHTML = isDone ? '✓' : (lv.isLocked ? '🔒' : (lv.icon || lv.emoji || '⭐'));
+
+            if (isActive) {
+                const deco = document.createElement('span');
+                deco.className = 'jn-deco';
+                deco.textContent = lv.deco || '🌸';
+                wrap.appendChild(deco);
+            }
+
+            const label = document.createElement('div');
+            label.className = 'jn-label' + (isLocked ? ' jn-locked-lbl' : '');
+            label.textContent = lv.name || lv.shortLabel || `Lv ${i+1}`;
+
+            wrap.appendChild(circle);
+            wrap.appendChild(label);
+            container.appendChild(wrap);
+        });
+
+        // Draw SVG lines — wait for layout
+        const drawLines = () => _drawZigzagLines(container, svg, currentLevel);
+        requestAnimationFrame(drawLines);
+
+        // Redraw on resize
+        if (container._resizeObserver) container._resizeObserver.disconnect();
+        container._resizeObserver = new ResizeObserver(() => requestAnimationFrame(drawLines));
+        container._resizeObserver.observe(container);
+    }
+
+    function _drawZigzagLines(container, svg, currentLevel) {
+        const containerRect = container.getBoundingClientRect();
+        const nodeEls = container.querySelectorAll('.jn-circle');
+        const arr = Array.from(nodeEls);
+
+        svg.innerHTML = ''; // clear old lines
+
+        for (let i = 0; i < arr.length - 1; i++) {
+            const a = arr[i].getBoundingClientRect();
+            const b = arr[i+1].getBoundingClientRect();
+            const x1 = a.left + a.width/2  - containerRect.left;
+            const y1 = a.top  + a.height/2 - containerRect.top;
+            const x2 = b.left + b.width/2  - containerRect.left;
+            const y2 = b.top  + b.height/2 - containerRect.top;
+
+            const isDone   = currentLevel > (i + 1);
+            const isActive = currentLevel === (i + 1);
+
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+            line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+            line.setAttribute('stroke', isDone || isActive ? '#FFD97D' : '#ccc');
+            line.setAttribute('stroke-width', isDone ? 5 : 3);
+            line.setAttribute('stroke-linecap', 'round');
+            if (!isDone && !isActive) line.setAttribute('stroke-dasharray', '6 5');
+            svg.appendChild(line);
+        }
+
+        svg.setAttribute('width',  containerRect.width);
+        svg.setAttribute('height', container.offsetHeight);
+        svg.style.width  = containerRect.width  + 'px';
+        svg.style.height = container.offsetHeight + 'px';
+    }
+
+    function renderJourneyFallback(container) {
+        const fallbackDefs = [
+            { levelNumber:1, name:'Level 1', icon:'🌱', deco:'🌸' },
+            { levelNumber:2, name:'Level 2', icon:'🌿', deco:'🌺' },
+            { levelNumber:3, name:'Level 3', icon:'🌸', deco:'🌟' },
+            { levelNumber:4, name:'Level 4', icon:'⭐', deco:'🦋' },
+            { levelNumber:5, name:'Level 5', icon:'🏆', deco:'🌈' },
+            { levelNumber:6, name:'Level 6', icon:'🌟', deco:'✨' },
+        ];
+        _buildZigzagPreview(container, 1, null, fallbackDefs);
+    }
+
+
+    function wireQuickMessages() {
+        document.querySelectorAll('.quick-msg-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const input = document.getElementById('parent-msg-input');
+                if (input) {
+                    input.value = this.dataset.msg || '';
+                    input.focus();
+                }
+            });
+        });
+    }
+
+
+    function wireSendMessage() {
+        const sendBtn = document.getElementById('send-msg-btn');
+        if (!sendBtn) return;
+
+        sendBtn.addEventListener('click', async function () {
+            const input   = document.getElementById('parent-msg-input');
+            const content = input?.value?.trim();
+
+            if (!content) {
+                showToast('✏️ Write a message first!');
+                input?.focus();
+                return;
+            }
+
+            sendBtn.disabled    = true;
+            sendBtn.textContent = ' Sending...';
+
+            try {
+                const res = await childAuthFetch('/Children/send-message-to-parent', {
+                    method: 'POST',
+                    body:   JSON.stringify({ content })
+                });
+
+                if (!res) return; // 401/403 → already redirected
+
+                let responseData = {};
+                try { responseData = await res.json(); } catch { /* empty body is fine */ }
+
+                if (res.ok) {
+                    showToast('💌 Message sent to parent!');
+                    if (input) input.value = '';
+                } else {
+                    showToast(responseData.message || '❌ Could not send message. Please try again.');
+                }
+            } catch (err) {
+                console.error('[leafy] wireSendMessage error:', err);
+                showToast('⚠️ Connection error. Check your internet and try again.');
+            } finally {
+                sendBtn.disabled    = false;
+                sendBtn.textContent = ' Send Message';
+            }
+        });
+    }
+
+    function wireSubmitAnswer() {
+        const submitBtn = document.getElementById('submit-answer-btn');
+        if (!submitBtn) return;
+
+        submitBtn.addEventListener('click', async function () {
+            const input      = document.getElementById('question-answer-input');
+            const answer     = input?.value?.trim();
+            const questionId = submitBtn.dataset.questionId || null;
+
+            if (!answer) {
+                showToast(' Please write your answer first!');
+                input?.focus();
+                return;
+            }
+
+            submitBtn.disabled    = true;
+            submitBtn.textContent = '💾 Saving...';
+
+            try {
+                const payload = { answer };
+                if (questionId) payload.questionId = questionId;
+
+                const res = await childAuthFetch('/Children/submit-question-answer', {
+                    method: 'POST',
+                    body:   JSON.stringify(payload)
+                });
+
+                if (!res) return; // 401/403 → already redirected
+
+                let responseData = {};
+                try { responseData = await res.json(); } catch { /* empty body */ }
+
+                if (res.ok) {
+                    showToast('🌟 Answer saved! Great reflection!');
+                    if (input) {
+                        input.value       = '';
+                        input.placeholder = 'You already answered today\'s question! 🌟';
+                        input.disabled    = true;
+                    }
+                    submitBtn.textContent = ' Already answered today!';
+                    submitBtn.disabled    = true;
+                } else {
+                    showToast(responseData.message || '❌ Could not save your answer. Please try again.');
+                    submitBtn.disabled    = false;
+                    submitBtn.textContent = ' Submit Answer';
+                }
+            } catch (err) {
+                console.error('[leafy] wireSubmitAnswer error:', err);
+                showToast('⚠️ Connection error. Check your internet and try again.');
+                submitBtn.disabled    = false;
+                submitBtn.textContent = ' Submit Answer';
+            }
+        });
+    }
+
+    function escapeHtml(str) {
+        if (typeof str !== 'string') return String(str ?? '');
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    /* ── 12. loadTasks ──────────────────────────────────────────── */
+    /**
+     * Fetches GET /api/Tasks/my-tasks (child role) and renders the
+     * parent-assigned task list. Each task has a "Done ✅" button that
+     * calls PATCH /api/Tasks/{id}/complete — backend then notifies the parent.
+     * The card is hidden when there are no tasks.
+     *
+     * FIX: function was declared but body was empty — parent tasks card was
+     *      always hidden and tasks were never loaded from the backend.
+     */
+
+    /* ── loadJournalPreview ─────────────────────────────────────── */
+    /**
+     * Fetches today's journal entry (if any) and updates the
+     * Daily Journal card to show which sections are done.
+     */
+    async function loadJournalPreview() {
+        const SECTIONS = [
+            { id: 'spiritual', label: ' Connected with Allah', key: 'spiritDone' },
+            { id: 'social',    label: ' Social time',          key: 'socialDone' },
+            { id: 'homework',  label: ' Homework',             key: 'homeworkDone' },
+            { id: 'family',    label: ' Helped family',        key: 'familyDone' },
+            { id: 'nutrition', label: ' Nutrition',            key: 'nutritionDone' },
+            { id: 'movement',  label: ' Movement',             key: 'movementDone' },
+            { id: 'hobbies',   label: ' Hobbies',             key: 'hobbiesDone' },
+            { id: 'mood',      label: ' Mood',                 key: 'moodDone' },
+        ];
+
+        const SECTION_LABELS = {
+            spiritual: 'Connected with Allah',
+            social:    'Social time',
+            homework:  'Homework',
+            family:    'Helped family',
+            nutrition: 'Nutrition',
+            movement:  'Movement',
+            hobbies:   'Hobbies',
+            mood:      'Mood',
+        };
+
+        // Default: show all pending
+        function renderJournalCard(done = []) {
+            const total = SECTIONS.length;
+            const doneCount = done.length;
+            const pct = Math.round((doneCount / total) * 100);
+
+            // Progress bar
+            const bar = document.getElementById('journal-progress-bar');
+            if (bar) bar.style.width = pct + '%';
+
+            // Label
+            const label = document.getElementById('journal-sections-label');
+            if (label) label.textContent = `${doneCount}/${total} sections done today!`;
+
+            // Pending notices (max 3)
+            const pendingEl = document.getElementById('journal-pending-list');
+            if (pendingEl) {
+                const pending = SECTIONS.filter(s => !done.includes(s.id));
+                const shown = pending.slice(0, 3);
+                pendingEl.innerHTML = shown.map(s =>
+                    `<div class="journal-pending-notice">ℹ️ Leafy is waiting to hear about your <strong>${SECTION_LABELS[s.id]}</strong> today!</div>`
+                ).join('');
+            }
+
+            // Pills
+            SECTIONS.forEach(s => {
+                const pill = document.getElementById('jpill-' + s.id);
+                if (!pill) return;
+                if (done.includes(s.id)) {
+                    pill.className = 'jpill jpill-done';
+                } else {
+                    pill.className = 'jpill jpill-pending';
+                }
+                pill.textContent = s.label + (done.includes(s.id) ? ' ✓' : '');
+            });
+        }
+
+        // Start with default (all pending)
+        renderJournalCard([]);
+
+        if (typeof childAuthFetch !== 'function') return;
+        try {
+            const res = await childAuthFetch('/Children/today-journal');
+            if (!res || res.status === 204) return; // 204 = nothing saved today yet
+            if (!res.ok) return;
+            const todayEntry = await res.json();
+            if (!todayEntry) return;
+
+            // Determine which sections are done
+            const done = [];
+            if (todayEntry.spiritualActivities) done.push('spiritual');
+            if (todayEntry.socialTimeWith)       done.push('social');
+            if (todayEntry.completedSubjects)    done.push('homework');
+            if (todayEntry.helpedFamily)         done.push('family');
+            if (todayEntry.nutritionItems)       done.push('nutrition');
+            if (todayEntry.physicalActivity)     done.push('movement');
+            if (todayEntry.funActivities)        done.push('hobbies');
+            if (todayEntry.moodLevel)            done.push('mood');
+
+            renderJournalCard(done);
+        } catch (e) {
+            console.warn('[leafy] loadJournalPreview failed:', e);
+        }
+    }
+
+    async function loadTasks() {
+        const card   = document.getElementById('parent-tasks-card');
+        const listEl = document.getElementById('tasks-list');
+        if (!card || !listEl) return;
+
+        try {
+            const res = await childAuthFetch('/Tasks/my-tasks');
+            if (!res || !res.ok) return;
+
+            const tasks = await res.json();
+            const pending = (tasks || []).filter(t => t.isParentAssigned && !t.isCompleted);
+
+            if (!pending.length) {
+                card.style.display = 'none';
+                return;
+            }
+
+            card.style.display = 'block';
+            listEl.innerHTML = pending.map(t => `
+                <div style="display:flex;justify-content:space-between;align-items:center;
+                            background:#fff;padding:12px 16px;border-radius:20px;
+                            border:1px solid #FFE082;">
+                    <div>
+                        <div style="font-weight:700;color:#333;">${escapeHtml(t.title)}</div>
+                        ${t.description
+                            ? `<div style="font-size:12px;color:#888;margin-top:2px;">${escapeHtml(t.description)}</div>`
+                            : ''}
+                        <div style="font-size:11px;color:#F57F17;margin-top:4px;">
+                            🎯 ${t.points || 0} pts  •  Due: ${t.dueDate || 'no deadline'}
+                        </div>
+                    </div>
+                    <button
+                        onclick="completeTask(${t.id}, this)"
+                        style="background:#4CAF50;color:white;border:none;padding:8px 16px;
+                               border-radius:15px;font-weight:700;cursor:pointer;font-size:13px;
+                               white-space:nowrap;margin-left:10px;">
+                        Done ✅
+                    </button>
+                </div>
+            `).join('');
+
+        } catch (err) {
+            console.warn('[leafy] loadTasks error:', err);
+        }
+    }
+
+    /**
+     * completeTask — called when the child taps "Done ✅" on a task card.
+     * Calls PATCH /api/Tasks/{id}/complete and removes the card on success.
+     */
+    async function completeTask(taskId, btn) {
+        if (!taskId || !btn) return;
+        btn.disabled    = true;
+        btn.textContent = '⏳';
+
+        try {
+            const res = await childAuthFetch(`/Tasks/${taskId}/complete`, { method: 'PATCH' });
+            if (!res) return;
+
+            if (res.ok) {
+                showToast('🎉 Task completed! Great job!');
+                const row = btn.closest('div[style]');
+                if (row) row.remove();
+
+                const listEl = document.getElementById('tasks-list');
+                if (listEl && !listEl.querySelector('button')) {
+                    const card = document.getElementById('parent-tasks-card');
+                    if (card) card.style.display = 'none';
+                }
+            } else {
+                const d = await res.json().catch(() => ({}));
+                showToast(d.message || ' Could not complete task. Try again.');
+                btn.disabled    = false;
+                btn.textContent = 'Done ';
+            }
+        } catch (err) {
+            console.error('[leafy] completeTask error:', err);
+            showToast('⚠️ Connection error. Try again.');
+            btn.disabled    = false;
+            btn.textContent = 'Done ';
+        }
+    }
+
+    /* ─────────────────────────────────────────────────────────────────
+       loadLevelWidget  —  Dashboard mini level card
+       Calls GET /api/BadgeLevel/levels/me (new spec endpoint) to get:
+         current_level_number, current_level_name, current_level_title,
+         trust_score, progress_percentage, next_level.required_badges,
+         next_level.min_trust_score  (spec fields)
+       Populates #level-progress-widget in the badges card.
+    ──────────────────────────────────────────────────────────────── */
+    async function loadLevelWidget() {
+        try {
+            const res = await childAuthFetch('/BadgeLevel/levels/me');
+            if (!res || !res.ok) return;
+            const d = await res.json();
+
+            const levelNum    = d.current_level_number  || 1;
+            const levelName   = d.current_level_title   || d.current_level_name || 'Sprout';
+            const progressPct = d.progress_percentage   || 0;
+            const trustScore  = d.trust_score           != null ? Math.round(d.trust_score * 100) : null;
+            const next        = d.next_level;
+
+            // Update mini-widget
+            const nameEl = document.getElementById('lw-level-name');
+            const barEl  = document.getElementById('lw-bar');
+            const reqEl  = document.getElementById('lw-requirement');
+
+            if (nameEl) nameEl.textContent = `Lv.${levelNum} — ${levelName}`;
+            if (barEl)  barEl.style.width  = Math.min(100, progressPct) + '%';
+
+            if (reqEl && next) {
+                const badgeReq  = next.required_badges || 0;
+                const trustReq  = next.min_trust_score  != null
+                    ? Math.round(next.min_trust_score * 100)
+                    : null;
+                const trustStr  = trustReq != null && trustReq > 0
+                    ? ` · Trust ≥ ${trustReq}%`
+                    : '';
+                reqEl.textContent = badgeReq > 0
+                    ? `Next: ${badgeReq} badge${badgeReq === 1 ? '' : 's'} needed${trustStr}`
+                    : trustStr ? `Next: ${trustStr.trim()}` : '';
+            } else if (reqEl && !next) {
+                reqEl.textContent = '🌟 Max level reached!';
+            }
+        } catch (e) {
+            console.warn('[leafy] loadLevelWidget error:', e);
+        }
+    }
+
+    </script>
+</body>
+</html>

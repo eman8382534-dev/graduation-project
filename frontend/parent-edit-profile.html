@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Growia - Edit Hero Plan</title>
+  <link rel="stylesheet" href="styles.css">  
+  <style>
+    body { background: var(--sky-light); }
+    .page { min-height: 100vh; position: relative; overflow: hidden; }
+
+    .sun-deco {
+      position: absolute; top: 0; right: 0; width: 130px; height: 130px;
+      background: radial-gradient(circle,#ffe066,#f5c842);
+      border-radius: 0 0 0 100%;
+      display: flex; align-items: flex-start; justify-content: flex-end;
+      padding: 14px; font-size: 48px; pointer-events: none; z-index: 2;
+    }
+    .ground-deco { position: absolute; bottom: 0; left: 0; right: 0; height: 100px; pointer-events: none; z-index: 1; }
+    .fence-d {
+      position: absolute; bottom: 40px; left: 0; right: 0; height: 50px;
+      background: repeating-linear-gradient(90deg,white 0,white 18px,transparent 18px,transparent 26px);
+      border-top: 6px solid white;
+    }
+    .grass-d {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 44px;
+      background: linear-gradient(to bottom,#7ec850,#5ca830);
+    }
+
+    .top-bar { padding: 16px 24px; position: relative; z-index: 10; }
+    .content { max-width: 900px; margin: 0 auto; padding: 0 24px 130px; position: relative; z-index: 5; }
+
+    /* Profile card */
+    .profile-card {
+      background: linear-gradient(135deg,white,#f8fbfd);
+      border-radius: var(--radius-xl); padding: 28px; margin-bottom: 20px; box-shadow: var(--shadow-sm);
+    }
+    .profile-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .child-avatar {
+      width: 60px; height: 60px; border-radius: 50%; background: #f0f7fa;
+      border: 3px solid var(--mint-light, #c8f0e0);
+      display: flex; align-items: center; justify-content: center; font-size: 28px;
+    }
+    .edit-title { font-family: var(--font-display); font-size: 24px; color: var(--coral); }
+    .name-age-row { display: grid; grid-template-columns: 1fr 200px; gap: 16px; margin-bottom: 12px; }
+    .interest-note {
+      display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--teal);
+      font-style: italic; background: #f0f7fa; padding: 10px 14px; border-radius: var(--radius-md);
+    }
+
+    /* Management sections */
+    .mgmt-title {
+      font-family: var(--font-display); font-size: 20px; color: var(--text-dark);
+      display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
+    }
+    .mgmt-section {
+      background: white; border-radius: var(--radius-xl); padding: 24px;
+      margin-bottom: 16px; box-shadow: var(--shadow-sm);
+    }
+    .section-head {
+      font-family: var(--font-display); font-size: 18px; color: var(--coral);
+      display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
+    }
+
+    .item-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; background: #f8fbfd; border-radius: var(--radius-md);
+      margin-bottom: 8px; font-size: 15px; color: var(--text-dark);
+    }
+    .delete-item {
+      width: 28px; height: 28px; border-radius: 50%; background: #fde8e0;
+      border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 14px; color: var(--coral); transition: all 0.2s; flex-shrink: 0;
+    }
+    .delete-item:hover { background: var(--coral); color: white; }
+
+    .add-row  { display: flex; gap: 10px; align-items: center; }
+    .add-input {
+      flex: 1; padding: 11px 14px; border: 2px solid #e8f4f8;
+      border-radius: var(--radius-md); font-family: var(--font-main); font-size: 14px;
+      color: var(--text-dark); background: #f8fbfd; outline: none;
+    }
+    .add-input:focus { border-color: var(--teal); background: white; }
+    .add-input::placeholder { color: #b0c4ce; }
+    .add-btn {
+      padding: 10px 18px; background: var(--yellow); border: none;
+      border-radius: var(--radius-full); font-family: var(--font-main); font-weight: 800;
+      font-size: 14px; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    }
+    .add-btn:hover { background: var(--yellow-dark); }
+
+    /* Save bar */
+    .save-bar { position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%); z-index: 100; }
+    .save-btn {
+      display: flex; align-items: center; gap: 10px; padding: 16px 40px;
+      background: var(--yellow); border: none; border-radius: var(--radius-full);
+      font-family: var(--font-main); font-weight: 800; font-size: 17px; cursor: pointer;
+      box-shadow: var(--shadow-lg); transition: all 0.2s;
+    }
+    .save-btn:hover { background: var(--yellow-dark); transform: scale(1.03); }
+    .save-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    /* Toast */
+    #toast {
+      position: fixed; bottom: 30px; right: 30px; padding: 14px 24px;
+      border-radius: var(--radius-full); font-weight: 700; font-size: 15px;
+      transform: translateY(100px); opacity: 0; transition: all 0.3s;
+      z-index: 999; color: white; pointer-events: none;
+    }
+
+    @media (max-width: 560px) { .name-age-row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="sun-deco">☀️</div>
+  <div class="butterfly" style="top:200px;left:160px;">🦋</div>
+  <div class="butterfly" style="top:360px;left:155px;animation-delay:-2s;">🦋</div>
+  <div class="butterfly" style="top:500px;right:60px;">🦋</div>
+
+  <div class="ground-deco">
+    <div class="fence-d"></div>
+    <div class="grass-d"></div>
+  </div>
+
+  <div class="top-bar">
+    <a href="#" class="back-btn" id="backLink">← Back to Insights</a>
+  </div>
+
+  <div class="content">
+
+    <div class="profile-card">
+      <div class="profile-header">
+        <div class="child-avatar" id="childIcon">👤</div>
+        <div class="edit-title" id="editTitle">Loading Profile…</div>
+      </div>
+      <div class="name-age-row">
+        <div class="form-group">
+          <label class="form-label" for="childNameInput">Name</label>
+          <input type="text" class="form-input" id="childNameInput" readonly style="background:#f8f9fa;cursor:not-allowed;">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="childAgeInput">Age</label>
+          <input type="number" class="form-input" id="childAgeInput" readonly style="background:#f8f9fa;cursor:not-allowed;">
+        </div>
+      </div>
+      <div class="interest-note">💡 Interests are managed by the child in their own profile.</div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <span style="font-size:24px;">📋</span>
+      <div class="mgmt-title" style="margin-bottom:0;">🌻 Daily Management</div>
+    </div>
+
+    <div class="mgmt-section">
+      <div class="section-head">🖊️ Chores</div>
+      <div id="choresList"></div>
+      <div class="add-row">
+        <input type="text" class="add-input" id="newChore" placeholder="Add a chore…">
+        <button class="add-btn" onclick="addItem('choresList','newChore')">+ Add</button>
+      </div>
+    </div>
+
+    <div class="mgmt-section">
+      <div class="section-head">📚 Study Subjects</div>
+      <div id="subjectsList"></div>
+      <div class="add-row">
+        <input type="text" class="add-input" id="newSubject" placeholder="Add a study subject…">
+        <button class="add-btn" onclick="addItem('subjectsList','newSubject')">+ Add</button>
+      </div>
+    </div>
+
+    <div class="mgmt-section">
+      <div class="section-head">⚽ Sports</div>
+      <div id="sportsList"></div>
+      <div class="add-row">
+        <input type="text" class="add-input" id="newSport" placeholder="Add a sport…">
+        <button class="add-btn" onclick="addItem('sportsList','newSport')">+ Add</button>
+      </div>
+    </div>
+
+  </div><div class="save-bar">
+    <button class="save-btn" id="saveBtn" onclick="saveChanges()">💾 Save Changes</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="script.js"></script>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const heroId = params.get('heroId');
+
+  if (!getParentToken()) {
+    window.location.href = 'parent-login.html';
+  }
+
+  if (!heroId) {
+    alert('No hero selected. Returning to dashboard.');
+    window.location.href = 'parent-dashboard.html';
+  }
+
+  const AVATAR_MAP = {
+    'cat':'🐱','butterfly':'🦋','lion':'🦁','tiger':'🐯','panda':'🐼',
+    '🦁':'🦁','🦋':'🦋','🌸':'🌸','🐯':'🐯','🦊':'🦊','🐸':'🐸','🦄':'🦄','🐼':'🐼',
+    'explorer':'🧭','sprout':'🌱','hero':'🦸'
+  };
+
+  /* ── Load hero management data ───────────────────────────── */
+  async function loadHeroManagement() {
+    if (!heroId) return;
+
+    document.getElementById('backLink').href = `parent-child-insights.html?heroId=${heroId}`;
+
+    try {
+      const res = await authFetch(`/Parent/hero-management/${heroId}`, 'parent');
+
+      if (res.status === 401 || res.status === 403) { logout('parent-login.html'); return; }
+
+      if (!res.ok) {
+        showToast('Failed to load hero data', '#e74c3c');
+        return;
+      }
+
+      const data = await res.json();
+
+      // Populate read-only profile fields
+      document.getElementById('childNameInput').value = data.profile?.fullName ?? '';
+      document.getElementById('childAgeInput').value  = data.profile?.age ?? '';
+      document.getElementById('childIcon').textContent =
+        AVATAR_MAP[(data.profile?.characterType ?? '').toLowerCase()] || '👤';
+
+      const firstName = (data.profile?.fullName ?? 'Hero').split(' ')[0];
+      document.getElementById('editTitle').textContent = `📋 Daily Plan — ${firstName}`;
+
+      renderList('choresList',   data.chores   ?? []);
+      renderList('subjectsList', data.subjects ?? []);
+      renderList('sportsList',   data.sports   ?? []);
+    } catch (e) {
+      console.error('Load error:', e);
+      showToast('Network error 🌐', '#e74c3c');
+    }
+  }
+
+  /* ── Render a list section ───────────────────────────────── */
+  function renderList(listId, items) {
+    const list = document.getElementById(listId);
+    if (!items.length) {
+      list.innerHTML = '<p style="font-size:13px;color:var(--text-light);padding:8px 0;">No items yet.</p>';
+      return;
+    }
+    list.innerHTML = items.map(item =>
+      `<div class="item-row">
+           <span>${escapeHtml(item)}</span>
+           <button class="delete-item" onclick="removeItem(this)" title="Remove">✕</button>
+         </div>`
+    ).join('');
+  }
+
+  /* ── Add item to a list ──────────────────────────────────── */
+  function addItem(listId, inputId) {
+    const input = document.getElementById(inputId);
+    const val   = input.value.trim();
+    if (!val) return;
+
+    // Remove "no items yet" placeholder
+    const list = document.getElementById(listId);
+    const placeholder = list.querySelector('p');
+    if (placeholder) placeholder.remove();
+
+    const div = document.createElement('div');
+    div.className = 'item-row';
+    div.innerHTML = `<span>${escapeHtml(val)}</span><button class="delete-item" onclick="removeItem(this)" title="Remove">✕</button>`;
+    list.appendChild(div);
+    input.value = '';
+    input.focus();
+  }
+
+  function removeItem(btn) {
+    btn.closest('.item-row').remove();
+  }
+
+  /* ── Save changes via PATCH ──────────────────────────────── */
+  async function saveChanges() {
+    const getItems = id => Array.from(document.querySelectorAll(`#${id} .item-row span`))
+      .map(el => el.textContent.trim())
+      .filter(Boolean);
+
+    const btn = document.getElementById('saveBtn');
+    btn.disabled    = true;
+    btn.textContent = 'Saving…';
+
+    try {
+      const response = await authFetch(`/Parent/hero-management/${heroId}`, 'parent', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          Chores: getItems('choresList'),
+          Subjects: getItems('subjectsList'),
+          Sports: getItems('sportsList')
+        })
+      });
+
+      if (response.status === 401 || response.status === 403) {
+        logout('parent-login.html');
+        return;
+      }
+
+      const result = await response.json().catch(() => ({}));
+      showToast(response.ok ? '✅ Daily plan saved!' : (result.message || 'Failed to save'), response.ok ? '#27ae60' : '#e74c3c');
+    } catch {
+      showToast('Network error 🌐', '#e74c3c');
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = '💾 Save Changes';
+    }
+  }
+
+  /* ── Toast notification ──────────────────────────────────── */
+  function showToast(msg, color) {
+    const t = document.getElementById('toast');
+    t.textContent       = msg;
+    t.style.background  = color;
+    t.style.transform   = 'translateY(0)';
+    t.style.opacity     = '1';
+    setTimeout(() => { t.style.transform = 'translateY(100px)'; t.style.opacity = '0'; }, 3000);
+  }
+
+  /* ── HTML-escape helper (prevent XSS in user-entered items) ─ */
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ── Enter-key support for add inputs ───────────────────── */
+  [['newChore','choresList'],['newSubject','subjectsList'],['newSport','sportsList']]
+    .forEach(([inputId, listId]) => {
+      document.getElementById(inputId).addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); addItem(listId, inputId); }
+      });
+    });
+
+  /* ── Init ────────────────────────────────────────────────── */
+  window.addEventListener('load', () => {
+    loadHeroManagement();
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Growia - Parent Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { background: var(--peach); }
+
+    /* Top bar */
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 32px; background: var(--peach);
+    }
+    .parent-greeting { display: flex; align-items: center; gap: 16px; }
+    .parent-avatar {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: linear-gradient(135deg, #f5a0a0, #e07070);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; box-shadow: var(--shadow-sm);
+    }
+    .greeting-text h2 { font-family: var(--font-display); font-size: 26px; color: var(--coral); margin-bottom: 2px; }
+    .greeting-text p  { font-size: 13px; color: var(--teal); font-weight: 600; }
+
+    .logout-btn {
+      padding: 10px 20px; background: var(--coral); color: white; border: none;
+      border-radius: var(--radius-full); font-family: var(--font-main);
+      font-weight: 700; font-size: 14px; cursor: pointer;
+      text-decoration: none; transition: all 0.2s;
+    }
+    .logout-btn:hover { background: var(--coral-dark); }
+
+    /* Main content */
+    .main { max-width: 1100px; margin: 0 auto; padding: 0 24px 40px; }
+
+    /* Alerts */
+    .alerts-section {
+      background: white; border-radius: var(--radius-xl);
+      padding: 24px; margin-bottom: 28px; box-shadow: var(--shadow-sm);
+    }
+    .alerts-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+    }
+    .alerts-title {
+      font-family: var(--font-display); font-size: 22px; color: var(--text-dark);
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .alert-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px; border-radius: var(--radius-md);
+      margin-bottom: 8px; font-size: 14px; font-weight: 600;
+    }
+    .alert-item.warning  { background: #fff9e6; color: #856404; }
+    .alert-item.critical { background: #ffebee; color: #c62828; border-left: 4px solid #e53935; }
+    .alert-item.medium   { background: #fff8e1; color: #f57f17; border-left: 4px solid #ffa000; }
+    .alert-item.low      { background: #e3f2fd; color: #1565c0; border-left: 4px solid #1e88e5; }
+    .alert-item.success { background: #d4f4dd; color: #155724; }
+    .alert-item.message { background: #f0f7fa; color: var(--teal); }
+    .alert-item.doubt   { background: #fff0e6; color: #8b4000; }
+
+    /* Heroes grid */
+    .heroes-title {
+      font-family: var(--font-display); font-size: 22px; color: var(--text-dark);
+      display: flex; align-items: center; gap: 8px; margin-bottom: 20px;
+    }
+    .heroes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 340px));
+      gap: 20px; margin-bottom: 24px; justify-content: center;
+    }
+    .hero-card {
+      background: white; border-radius: var(--radius-xl); padding: 20px 16px;
+      box-shadow: var(--shadow-sm); text-decoration: none; color: inherit;
+      display: flex; flex-direction: column; transition: all 0.25s; min-height: 400px;
+    }
+    .hero-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+
+    .hero-card-header { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+    .hero-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg,#a0d8e8,#6ab8ce);
+      display: flex; align-items: center; justify-content: center; font-size: 22px;
+    }
+    .hero-card-info h3 { font-family: var(--font-display); font-size: 20px; color: var(--teal); margin-bottom: 2px; }
+    .hero-card-info p  { font-size: 13px; color: var(--text-light); }
+
+    .archetype-badge {
+      display: flex; align-items: center; gap: 8px;
+      background: #f8f0ff; border-radius: var(--radius-md); padding: 10px 14px; margin-bottom: 16px;
+    }
+    .arch-icon { font-size: 20px; }
+    .arch-name { font-size: 14px; font-weight: 700; color: #7c3aed; }
+    .arch-desc { font-size: 12px; color: var(--text-light); }
+
+    .traits-label {
+      font-size: 12px; font-weight: 700; color: var(--text-light);
+      text-transform: uppercase; letter-spacing: 0.8px; margin: 20px 0 10px;
+    }
+    .trait-mini { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .trait-mini-label { font-size: 13px; color: var(--text-mid); width: 80px; }
+    .trait-mini-bar   { flex: 1; height: 8px; background: #f0f7fa; border-radius: 4px; overflow: hidden; }
+    .trait-mini-fill  { height: 100%; border-radius: 4px; }
+    .trait-mini-pct   { font-size: 12px; color: var(--text-light); width: 32px; text-align: right; }
+
+    .hero-card-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: auto; padding-top: 10px; border-top: 1px solid #f0f7fa;
+    }
+    .hp-display { display: flex; align-items: center; gap: 6px; }
+    .hp-icon    { font-size: 18px; }
+    .hp-val     { font-family: var(--font-display); font-size: 18px; color: var(--teal); }
+    .hp-lab     { font-size: 12px; color: var(--text-light); }
+    .trust-display .trust-val { font-weight: 800; color: var(--text-dark); font-size: 16px; }
+    .trust-display .trust-lab { font-size: 12px; color: var(--text-light); }
+    .doubt-warning { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #e67e22; font-weight: 700; margin-top: 6px; }
+
+    /* Bottom action buttons */
+    .action-buttons {
+      display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-top: 8px;
+    }
+    .add-kid-btn {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 14px 28px; background: var(--yellow); color: var(--text-dark);
+      border-radius: var(--radius-full); font-family: var(--font-display); font-size: 18px;
+      cursor: pointer; border: none; text-decoration: none; transition: all 0.2s;
+      box-shadow: var(--shadow-sm);
+    }
+    .add-kid-btn:hover { background: var(--yellow-dark); transform: scale(1.03); }
+    .link-kid-btn {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 14px 28px; background: var(--teal); color: white;
+      border-radius: var(--radius-full); font-family: var(--font-display); font-size: 18px;
+      cursor: pointer; border: none; text-decoration: none; transition: all 0.2s;
+      box-shadow: var(--shadow-sm);
+    }
+    .link-kid-btn:hover { background: var(--green-dark); transform: scale(1.03); }
+
+    /* Link child modal */
+    .link-modal-content {
+      background: white; padding: 32px; border-radius: var(--radius-xl);
+      text-align: center; width: 90%; max-width: 400px;
+    }
+    .link-modal-content h3 {
+      color: var(--teal); margin-bottom: 8px;
+      font-family: var(--font-display); font-size: 22px;
+    }
+    .link-modal-content p { font-size: 14px; color: var(--text-mid); margin-bottom: 20px; }
+    .link-modal-content .form-input { margin: 0 0 20px; }
+    .link-modal-btns { display: flex; gap: 10px; justify-content: center; }
+
+    .btn-teal {
+      padding: 12px 24px; background: var(--teal); color: white; border: none;
+      border-radius: var(--radius-full); font-family: var(--font-main); font-weight: 700;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-teal:hover { background: var(--green-dark); }
+    .btn-outline {
+      padding: 12px 24px; background: transparent; color: var(--text-mid);
+      border: 2px solid #e0e7ef; border-radius: var(--radius-full);
+      font-family: var(--font-main); font-weight: 700; cursor: pointer;
+    }
+    .btn-outline:hover { border-color: var(--teal); color: var(--teal); }
+
+    @media (max-width: 640px) {
+      .top-bar { padding: 12px 16px; }
+      .main    { padding: 0 12px 32px; }
+      .action-buttons { flex-direction: column; align-items: center; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="parent-greeting">
+    <div class="parent-avatar">👩‍👧</div>
+    <div class="greeting-text">
+      <h2 id="parentTitle">Hi, Parent!</h2>
+      <p>Welcome to your Garden Watch</p>
+    </div>
+  </div>
+  <div style="display:flex; align-items:center; gap:10px;">
+    <button onclick="openProfileModal()" class="logout-btn" style="background:var(--teal);"> Profile</button>
+    <button onclick="logout('parent-login.html')" class="logout-btn">Logout</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="profileEditModal" style="display:none;align-items:center;justify-content:center;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;">
+  <div style="background:white;border-radius:24px;padding:30px;max-width:420px;width:90%;position:relative;">
+    <button onclick="closeModal('profileEditModal')" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;">✕</button>
+    <h3 style="color:var(--teal);margin:0 0 20px;">Edit Your Profile</h3>
+    <div style="margin-bottom:14px;">
+      <label style="display:block;font-weight:700;margin-bottom:4px;font-size:14px;">Full Name</label>
+      <input type="text" id="profileEditName" style="width:100%;padding:10px;border:2px solid #eee;border-radius:12px;box-sizing:border-box;font-family:inherit;font-size:14px;">
+    </div>
+    <div style="margin-bottom:20px;">
+      <label style="display:block;font-weight:700;margin-bottom:4px;font-size:14px;">Email Address</label>
+      <input type="email" id="profileEditEmail" style="width:100%;padding:10px;border:2px solid #eee;border-radius:12px;box-sizing:border-box;font-family:inherit;font-size:14px;">
+    </div>
+    <div id="profileEditError" style="color:#e74c3c;font-size:13px;margin-bottom:10px;display:none;"></div>
+    <button onclick="saveProfileEdits()" style="width:100%;padding:12px;background:var(--teal);color:white;border:none;border-radius:var(--radius-full);font-weight:700;font-size:15px;cursor:pointer;">
+       Save Changes
+    </button>
+  </div>
+</div>
+
+
+<div class="main">
+  <div class="alerts-section">
+    <div class="alerts-header">
+      <div class="alerts-title"> Alerts</div>
+    </div>
+    <div id="alertsList">
+      <div class="alert-item message">Loading daily updates…</div>
+    </div>
+  </div>
+
+  <div class="heroes-title">⭐ Your Heroes</div>
+  <div class="heroes-grid" id="heroesGrid">
+    <p style="text-align:center;grid-column:1/-1;color:var(--text-light);">Fetching your little heroes…</p>
+  </div>
+
+  <div class="action-buttons">
+    <button onclick="(function(){const email=localStorage.getItem('parentEmail')||'';window.location.href='child-signup.html?mode=parent'+(email?'&parentEmail='+encodeURIComponent(email):'');})()" class="add-kid-btn">
+      + Add New Hero
+    </button>
+    <button onclick="openLinkModal()" class="link-kid-btn">
+      🔗 Link Existing Hero
+    </button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="linkModal" style="display:none; align-items:center; justify-content:center; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000;">
+  <div class="link-modal-content">
+    <h3>🔗 Link Existing Hero</h3>
+    <p>Enter the 6-character code your child was given when they registered standalone.</p>
+    <input
+      id="linkTokenInput"
+      class="form-input"
+      placeholder="e.g. ABC123"
+      maxlength="6"
+      style="text-transform:uppercase;letter-spacing:4px;font-size:20px;text-align:center;"
+    >
+    <div id="linkError" style="color:#e74c3c;font-size:13px;margin:-12px 0 16px;display:none;"></div>
+    <div class="link-modal-btns">
+      <button class="btn-teal" id="confirmLinkBtn" onclick="confirmLink()">Confirm Link</button>
+      <button class="btn-outline" onclick="closeModal('linkModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+<script src="script.js"></script>
+<script>
+  const AVATAR_MAP = {
+    'cat':'🐱','butterfly':'🦋','lion':'🦁','tiger':'🐯','panda':'🐼',
+    '🦁':'🦁','🦋':'🦋','🌸':'🌸','🐯':'🐯','🦊':'🦊','🐸':'🐸','🦄':'🦄','🐼':'🐼',
+    'explorer':'🧭','sprout':'🌱','hero':'🦸'
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!requireParentAuth('parent-login.html')) return;
+
+    const cachedName = localStorage.getItem('parentFullName');
+    if (cachedName) {
+      document.getElementById('parentTitle').textContent = `Hi, ${cachedName.split(' ')[0]}!`;
+    }
+
+    loadParentProfile();
+    loadDashboard().then(() => {
+      const params   = new URLSearchParams(window.location.search);
+      const heroId   = params.get('openAssign');
+      if (heroId) {
+        const heroCard = document.querySelector(`[data-hero-id="${heroId}"]`);
+        const heroName = heroCard ? heroCard.dataset.heroName : 'Hero';
+        openAssignTaskModal(parseInt(heroId), heroName);
+        history.replaceState(null, '', window.location.pathname);
+      }
+    });
+    setInterval(loadDashboard, 60000);
+  });
+
+  /* ── Load parent profile (name) ──────────────────────────── */
+  function openProfileModal() {
+    const nameEl  = document.getElementById('profileEditName');
+    const emailEl = document.getElementById('profileEditEmail');
+    const errEl   = document.getElementById('profileEditError');
+    if (nameEl)  nameEl.value  = localStorage.getItem('parentFullName') || '';
+    if (emailEl) emailEl.value = localStorage.getItem('parentEmail') || '';
+    if (errEl)   errEl.style.display = 'none';
+    openModal('profileEditModal');
+  }
+
+  async function saveProfileEdits() {
+    const name  = document.getElementById('profileEditName').value.trim();
+    const email = document.getElementById('profileEditEmail').value.trim();
+    const errEl = document.getElementById('profileEditError');
+    errEl.style.display = 'none';
+    if (!name) { errEl.textContent = 'Name is required.'; errEl.style.display = 'block'; return; }
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errEl.textContent = 'Invalid email format.'; errEl.style.display = 'block'; return;
+    }
+    try {
+      const res = await authFetch('/Parent/profile', 'parent', {
+        method: 'PATCH',
+        body: JSON.stringify({ fullName: name, email: email || undefined })
+      });
+      if (!res) return;
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        localStorage.setItem('parentFullName', name);
+        if (email) localStorage.setItem('parentEmail', email);
+        closeModal('profileEditModal');
+        loadParentProfile();
+      } else {
+        errEl.textContent = data.message || 'Could not update profile.';
+        errEl.style.display = 'block';
+      }
+    } catch(e) {
+      errEl.textContent = 'Network error. Please try again.';
+      errEl.style.display = 'block';
+    }
+  }
+
+  async function loadParentProfile() {
+    try {
+      const res = await authFetch('/Parent/profile', 'parent');
+      if (res.ok) {
+        const data = await res.json();
+        const firstName = (data.fullName || 'Parent').split(' ')[0];
+        document.getElementById('parentTitle').textContent = `Hi, ${firstName}!`;
+        localStorage.setItem('parentFullName', data.fullName || '');
+      } else if (res.status === 401 || res.status === 403) {
+        logout('parent-login.html');
+      }
+    } catch { /* silently ignore */ }
+  }
+
+  /* ── Load dashboard data ─────────────────────────────────── */
+  async function loadDashboard() {
+    try {
+      const token = getParentToken();
+      if (!token) { logout('parent-login.html'); return; }
+
+      const response = await authFetch('/Parent/main-dashboard', 'parent');
+
+      if (response.status === 401 || response.status === 403) {
+        logout('parent-login.html');
+        return;
+      }
+
+      const data = await response.json();
+      renderAlerts(data.alerts || []);
+      renderHeroes(data.heroes || []);
+
+    } catch {
+      document.getElementById('alertsList').innerHTML =
+        '<div class="alert-item warning">⚠️ Connection error. Check that the API is running.</div>';
+    }
+  }
+
+  /* ── Render alerts ───────────────────────────────────────── */
+  function renderAlerts(alerts) {
+    const container = document.getElementById('alertsList');
+    if (!alerts.length) {
+      container.innerHTML = '<div class="alert-item success">✅ All heroes are doing great today!</div>';
+      return;
+    }
+    container.innerHTML = alerts.map(a => {
+      const cls = (a.type || '').toLowerCase() === 'doubt'
+        ? 'doubt'
+        : (a.type || '').toLowerCase() === 'success'
+          ? 'success'
+          : 'message';
+      return `<div class="alert-item ${cls}"><span>${a.message}</span></div>`;
+    }).join('');
+  }
+
+  /* ── Render heroes grid ──────────────────────────────────── */
+  function renderHeroes(heroes) {
+    const grid = document.getElementById('heroesGrid');
+    if (!heroes.length) {
+      grid.innerHTML = `
+        <p style="text-align:center;grid-column:1/-1;color:var(--text-light);font-size:16px;">
+          No heroes linked yet.<br>
+          <span style="font-size:13px;">Add a new hero or link an existing one below.</span>
+        </p>`;
+      return;
+    }
+    grid.innerHTML = heroes.map(hero => {
+      const icon       = AVATAR_MAP[(hero.characterType || '').toLowerCase()] || '🦸';
+      const isLowTrust = hero.trustScore < 70;
+      
+      // جلب النقاط ونسبة الأمان بشكل ديناميكي من السيرفر
+      const honestPoints = hero.honestPoints ?? (hero.honestDays != null ? hero.honestDays * 10 : 0);
+      const trustScore   = hero.trustScore ?? 0;
+      const trustColor   = isLowTrust ? '#e07878' : '#5b8c5a';
+      const archetype    = typeof computeArchetype === 'function'
+        ? computeArchetype(hero)
+        : { label: hero.characterType || 'The Rising Star', description: 'Your adventure is just beginning!' };
+
+      return `
+        <a href="parent-child-insights.html?heroId=${hero.id}" class="hero-card" data-hero-id="${hero.id}" data-hero-name="${(hero.fullName||'Hero').replace(/"/g,'&quot;')}">
+          <div class="hero-card-header">
+            <div class="hero-avatar">${icon}</div>
+            <div class="hero-card-info">
+              <h3>${hero.fullName}</h3>
+              <p>Age ${hero.age || 0} · Level ${hero.level || 1}</p>
+            </div>
+          </div>
+          <div class="archetype-badge">
+            <div class="arch-icon">✨</div>
+            <div>
+              <div class="arch-name">${archetype.label}</div>
+              <div class="arch-desc">${archetype.description}</div>
+            </div>
+          </div>
+          <div class="traits-label">Personality Traits</div>
+          ${renderTrait('Spiritual',   hero.spiritualTrait  ?? 0, '#c8a8e0')}
+          ${renderTrait('Kindness',    hero.kindnessTrait   ?? 0, '#7bc67e')}
+          ${renderTrait('Vitality',    hero.vitalityTrait   ?? 0, '#e07878')}
+          ${renderTrait('Curiosity',   hero.curiosityTrait  ?? 0, '#4fc3d8')}
+          ${renderTrait('Resilience',  hero.resilienceTrait ?? 0, '#f5c842')}
+          
+          <div class="hero-card-footer" style="display:flex; justify-content:space-between; align-items:center; padding-top:12px; margin-top:15px; border-top:1px solid #f9f9f9;">
+            <div class="hp-display" style="display:flex; align-items:center; gap:8px;">
+              <span class="hp-icon" style="font-size:18px;">💎</span>
+              <div>
+                <div class="hp-lab" style="font-size:12px; color:#5c6b73; font-weight:700; margin-bottom:2px;">Honest Points</div>
+                <div class="hp-val" style="color:#e07878; font-size:16px; font-weight:800;">${honestPoints} HP</div>
+              </div>
+            </div>
+            <div class="trust-display" style="text-align:right;">
+              <div class="trust-lab" style="font-size:12px; color:#5c6b73; font-weight:700; margin-bottom:2px;">Trust</div>
+              <div class="trust-val" style="color:${trustColor}; font-size:16px; font-weight:800;">${trustScore}%</div>
+            </div>
+          </div>
+          ${isLowTrust ? '<div class="doubt-warning" style="margin-top:10px;">⚠️ Doubt State — Review Required</div>' : ''}
+        </a>`;
+    }).join('');
+  }
+
+  function renderTrait(label, value, color) {
+    const pct = Math.min(100, Math.max(0, Math.round(value || 0)));
+    return `
+      <div class="trait-mini">
+        <div class="trait-mini-label">${label}</div>
+        <div class="trait-mini-bar"><div class="trait-mini-fill" style="width:${pct}%;background:${color}"></div></div>
+        <div class="trait-mini-pct">${pct}%</div>
+      </div>`;
+  }
+
+  /* ── Link modal ──────────────────────────────────────────── */
+  function openLinkModal() {
+    document.getElementById('linkTokenInput').value = '';
+    document.getElementById('linkError').style.display = 'none';
+    openModal('linkModal');
+  }
+
+  async function confirmLink() {
+    const rawToken = document.getElementById('linkTokenInput').value.trim().toUpperCase();
+    const errDiv   = document.getElementById('linkError');
+    errDiv.style.display = 'none';
+
+    if (!rawToken || rawToken.length < 4) {
+      errDiv.textContent    = 'Please enter a valid link code.';
+      errDiv.style.display  = 'block';
+      return;
+    }
+
+    const btn = document.getElementById('confirmLinkBtn');
+    btn.disabled    = true;
+    btn.textContent = 'Linking…';
+
+    try {
+      const liveToken = getParentToken();
+      if (!liveToken) { logout('parent-login.html'); return; }
+
+      const res = await authFetch('/Parent/link-child-by-token', 'parent', {
+        method: 'POST',
+        body: JSON.stringify(rawToken)
+      });
+
+      if (res.status === 401 || res.status === 403) { logout('parent-login.html'); return; }
+
+      const result = await res.json().catch(() => ({}));
+
+      if (res.ok) {
+        closeModal('linkModal');
+        showToast('🎉 Hero linked successfully!');
+        loadDashboard();
+      } else {
+        errDiv.textContent   = result.message || 'Invalid or already-used code.';
+        errDiv.style.display = 'block';
+      }
+    } catch {
+      errDiv.textContent   = 'Network error — is the API running?';
+      errDiv.style.display = 'block';
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = 'Confirm Link';
+    }
+  }
+
+  /* ── Assign Task Modal ──────────────────────────────────────── */
+  let _assignTargetChildId = null;
+
+  function openAssignTaskModal(childId, childName) {
+    _assignTargetChildId = childId;
+    document.getElementById('assignTaskHeroName').textContent = childName;
+    document.getElementById('assignTaskTitle').value  = '';
+    document.getElementById('assignTaskDesc').value   = '';
+    document.getElementById('assignTaskPoints').value = '10';
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    document.getElementById('assignTaskDue').value = tomorrow.toISOString().split('T')[0];
+    document.getElementById('assignTaskError').style.display = 'none';
+    openModal('assignTaskModal');
+  }
+
+  async function confirmAssignTask() {
+    const btn    = document.getElementById('confirmAssignBtn');
+    const errDiv = document.getElementById('assignTaskError');
+    const title  = document.getElementById('assignTaskTitle').value.trim();
+    const desc   = document.getElementById('assignTaskDesc').value.trim();
+    const points = parseInt(document.getElementById('assignTaskPoints').value, 10);
+    const due    = document.getElementById('assignTaskDue').value;
+
+    errDiv.style.display = 'none';
+
+    if (!title) {
+      errDiv.textContent   = 'Please enter a task title.';
+      errDiv.style.display = 'block';
+      document.getElementById('assignTaskTitle').focus();
+      return;
+    }
+    if (!points || points < 1 || points > 1000) {
+      errDiv.textContent   = 'Points must be between 1 and 1,000.';
+      errDiv.style.display = 'block';
+      return;
+    }
+    if (!due) {
+      errDiv.textContent   = 'Please choose a due date.';
+      errDiv.style.display = 'block';
+      return;
+    }
+    const dueDate = new Date(due);
+    const today   = new Date(); today.setHours(0, 0, 0, 0);
+    if (dueDate < today) {
+      errDiv.textContent   = 'Due date cannot be in the past.';
+      errDiv.style.display = 'block';
+      return;
+    }
+
+    btn.disabled    = true;
+    btn.textContent = '⏳ Assigning…';
+
+    try {
+      const res = await authFetch('/Tasks/assign', 'parent', {
+        method: 'POST',
+        body: JSON.stringify({
+          childId:     _assignTargetChildId,
+          title,
+          description: desc || null,
+          points,
+          dueDate:     dueDate.toISOString(),
+          category:    document.getElementById('assignTaskCategory')?.value || 'General'
+        })
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok) {
+        closeModal('assignTaskModal');
+        const toast = document.createElement('div');
+        toast.textContent = `✅ Task "${title}" assigned! Your child will be notified.`;
+        toast.style.cssText = `position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+          background:#4CAF50;color:#fff;padding:14px 24px;border-radius:20px;
+          font-weight:bold;z-index:9999;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,0.2);`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3500);
+      } else {
+        errDiv.textContent   = data.message || 'Could not assign task. Try again.';
+        errDiv.style.display = 'block';
+      }
+    } catch {
+      errDiv.textContent   = 'Network error — is the API running?';
+      errDiv.style.display = 'block';
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = '✅ Assign Task';
+    }
+  }
+</script>
+
+<div class="modal-overlay" id="assignTaskModal" style="display:none; align-items:center; justify-content:center; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000;">
+  <div class="link-modal-content" style="max-width:420px; width:90%;">
+    <h3>🎯 Assign Task to <span id="assignTaskHeroName"></span></h3>
+    <input id="assignTaskTitle" class="form-input" placeholder="Task title (e.g. Read for 20 mins)" maxlength="100" style="margin-bottom:12px;">
+    <textarea id="assignTaskDesc" placeholder="Description (optional)" maxlength="300"
+      style="width:100%; border-radius:14px; border:1px solid #eee; padding:12px;
+             box-sizing:border-box; resize:vertical; min-height:70px; font-family:inherit;
+             outline:none; margin-bottom:12px; font-size:14px;"></textarea>
+    <div style="display:flex; gap:10px; margin-bottom:12px;">
+      <div style="flex:1;">
+        <label style="font-size:12px; color:#888; display:block; margin-bottom:4px;">Points</label>
+        <input id="assignTaskPoints" type="number" min="1" max="500" value="10" class="form-input" style="margin:0;">
+      </div>
+      <div style="flex:1;">
+        <label style="font-size:12px; color:#888; display:block; margin-bottom:4px;">Due Date</label>
+        <input id="assignTaskDue" type="date" class="form-input" style="margin:0;">
+      </div>
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:12px; color:#888; display:block; margin-bottom:4px;">Category</label>
+      <select id="assignTaskCategory" class="form-input" style="margin:0;">
+        <option value="Study">📚 Study</option>
+        <option value="Sports">⚽ Sports</option>
+        <option value="Chores">🏠 Chores</option>
+        <option value="General" selected>🎯 General</option>
+        <option value="Spiritual">🕌 Spiritual</option>
+        <option value="Social">👥 Social</option>
+      </select>
+    </div>
+    <div id="assignTaskError" style="color:#e74c3c; font-size:13px; margin-bottom:10px; display:none;"></div>
+    <div class="link-modal-btns">
+      <button class="btn-teal" id="confirmAssignBtn" onclick="confirmAssignTask()">✅ Assign Task</button>
+      <button class="btn-outline" onclick="closeModal('assignTaskModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="globalToast" style="
+  position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(20px);
+  background:#27ae60; color:white; padding:13px 26px; border-radius:30px;
+  font-weight:700; font-size:0.95rem; opacity:0; transition:all 0.3s ease;
+  z-index:9999; white-space:nowrap; pointer-events:none;
+" aria-live="assertive"></div>
+<script>
+function showToast(msg, isSuccess) {
+  const t = document.getElementById('globalToast');
+  t.textContent = msg;
+  t.style.background = isSuccess === false ? '#e74c3c' : '#27ae60';
+  t.style.opacity = '1';
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(-50%) translateY(20px)';
+  }, 3500);
+}
+</script>
+</body>
+</html>

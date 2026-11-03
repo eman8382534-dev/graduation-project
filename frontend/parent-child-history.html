@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Growia - Activity History</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { background: var(--sky-light); }
+    .page { min-height: 100vh; position: relative; overflow: hidden; }
+
+    .sun-deco { position: absolute; top: 0; right: 0; width: 130px; height: 130px; background: radial-gradient(circle,#ffe066,#f5c842); border-radius: 0 0 0 100%; display: flex; align-items: flex-start; justify-content: flex-end; padding: 14px; font-size: 48px; pointer-events: none; z-index: 2; }
+    .ground-deco { position: absolute; bottom: 0; left: 0; right: 0; height: 100px; pointer-events: none; z-index: 1; }
+    .fence-d { position: absolute; bottom: 40px; left: 0; right: 0; height: 50px; background: repeating-linear-gradient(90deg,white 0,white 18px,transparent 18px,transparent 26px); border-top: 6px solid white; }
+    .grass-d { position: absolute; bottom: 0; left: 0; right: 0; height: 44px; background: linear-gradient(to bottom,#7ec850,#5ca830); }
+    .fl-d    { position: absolute; font-size: 24px; bottom: 42px; }
+
+    .top-bar { padding: 16px 24px; position: relative; z-index: 10; }
+
+    .history-header { display: flex; align-items: center; gap: 16px; padding: 0 24px 20px; position: relative; z-index: 5; }
+    .child-icon { width: 56px; height: 56px; border-radius: 50%; background: #f0f7fa; border: 3px solid var(--mint-light, #c8f0e0); display: flex; align-items: center; justify-content: center; font-size: 26px; }
+    .history-title { font-family: var(--font-display); font-size: 28px; color: var(--coral); margin-bottom: 2px; }
+    .history-sub   { font-size: 14px; color: var(--text-light); font-weight: 600; }
+
+    .content { max-width: 900px; margin: 0 auto; padding: 0 24px 120px; position: relative; z-index: 5; }
+
+    .day-card { background: white; border-radius: var(--radius-xl); padding: 24px; margin-bottom: 24px; box-shadow: var(--shadow-sm); }
+    .day-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .day-label      { font-family: var(--font-display); font-size: 22px; }
+    .day-label.today     { color: var(--coral); }
+    .day-label.yesterday { color: var(--teal); }
+    .day-label.older     { color: var(--text-mid); }
+    .day-date { font-size: 13px; color: var(--text-light); font-weight: 600; }
+
+    .export-btn { display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: #f8f8f8; border: 1.5px solid #e0e0e0; border-radius: var(--radius-full); font-family: var(--font-main); font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+    .export-btn:hover { background: #f0f0f0; }
+
+    .section-row { margin-bottom: 16px; }
+    .section-heading { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 800; margin-bottom: 8px; }
+    .section-heading.alarms     { color: var(--coral); }
+    .section-heading.activities { color: var(--teal); }
+    .section-heading.message-p  { color: var(--text-mid); }
+
+    .alarm-item    { padding: 10px 14px; background: #fff4f0; border-radius: var(--radius-md); font-size: 14px; color: var(--coral-dark); margin-bottom: 6px; }
+    .history-activity-item { padding: 10px 14px; background: #f0f7fa; border-radius: var(--radius-md); font-size: 14px; color: var(--teal); margin-bottom: 6px; }
+    .message-bubble { padding: 14px 16px; background: var(--peach); border-radius: var(--radius-md); font-size: 14px; font-style: italic; color: var(--text-mid); line-height: 1.5; }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="sun-deco">☀️</div>
+  <div class="butterfly" style="top:240px;left:30px;">🦋</div>
+  <div class="butterfly" style="top:500px;left:28px;animation-delay:-2s;">🦋</div>
+  <div class="ladybug"   style="top:390px;left:25px;">🐞</div>
+
+  <div class="ground-deco">
+    <div class="fence-d"></div>
+    <div class="grass-d"></div>
+    <span class="fl-d" style="left:120px;">🌸</span>
+    <span class="fl-d" style="right:160px;">🌷</span>
+  </div>
+
+  <div class="top-bar">
+    <a id="backToInsightsBtn" href="parent-dashboard.html" class="back-btn">← Back to Insights</a>
+  </div>
+
+  <div class="history-header">
+    <div id="heroAvatar" class="child-icon"></div>
+    <div>
+      <h2 id="heroNameTitle" class="history-title">Loading…</h2>
+      <p class="history-sub">Activity Archive</p>
+    </div>
+  </div>
+
+  <div class="content" id="historyContainer"></div>
+</div>
+
+<script src="script.js"></script>
+<script>
+  const params       = new URLSearchParams(window.location.search);
+  const heroId       = params.get('heroId');
+  const currentToken = getParentToken();
+
+  if (!currentToken) { window.location.href = 'parent-login.html'; }
+  if (!heroId) { window.location.href = 'parent-dashboard.html'; }
+
+  // Fix back button to point to the correct insights page
+  document.getElementById('backToInsightsBtn').href = `parent-child-insights.html?heroId=${heroId}`;
+
+  const AVATAR_MAP = {
+    'explorer':'🐯','butterfly':'🦋','flower':'🌸','cat':'🐱',
+    '🦁':'🦁','🦋':'🦋','🌸':'🌸','🐯':'🐯','🦊':'🦊','🐸':'🐸','🦄':'🦄','🐼':'🐼'
+  };
+
+  function getDayLabelClass(label) {
+    if (label === 'Today')     return 'today';
+    if (label === 'Yesterday') return 'yesterday';
+    return 'older';
+  }
+
+  async function loadHistory() {
+    if (!heroId) return;
+    try {
+      const response = await authFetch(`/Parent/hero-history/${heroId}`, 'parent');
+      if (response.status === 401 || response.status === 403) { logout('parent-login.html'); return; }
+      const data     = await response.json();
+
+      document.getElementById('heroAvatar').textContent    = AVATAR_MAP[data.characterType?.toLowerCase()] || '🦸';
+      document.getElementById('heroNameTitle').textContent = `${data.childName}'s History`;
+
+      const container = document.getElementById('historyContainer');
+      if (!data.history?.length) {
+        container.innerHTML = "<p style='text-align:center;'>No activity found for this hero yet.</p>";
+        return;
+      }
+
+      container.innerHTML = data.history.map(day => `
+        <div class="day-card">
+          <div class="day-header">
+            <div>
+              <div class="day-label ${getDayLabelClass(day.label)}">${day.label || day.date}</div>
+              <div class="day-date">${day.date}</div>
+            </div>
+            <button class="export-btn" onclick="window.print()">📋 Export PDF</button>
+          </div>
+          ${day.alarms?.length ? `
+            <div class="section-row">
+              <div class="section-heading alarms">🚨 Alarms</div>
+              ${day.alarms.map(a => `<div class="alarm-item">${a}</div>`).join('')}
+            </div>` : ''}
+          <div class="section-row">
+            <div class="section-heading activities">📋 Activities</div>
+            ${(day.activities || []).map(a => `<div class="history-activity-item">${a}</div>`).join('')}
+          </div>
+          ${day.messageToParent ? `
+            <div class="section-row">
+              <div class="section-heading message-p">📩 Message to Parent</div>
+              <div class="message-bubble">"${day.messageToParent}"</div>
+            </div>` : ''}
+          ${day.reflection ? `
+            <div class="section-row">
+              <div class="section-heading message-p">💭 Hero's Reflection</div>
+              <div class="message-bubble" style="background:#f0f7fa;">"${day.reflection}"</div>
+            </div>` : ''}
+        </div>`).join('');
+    } catch (e) {
+      console.error('Error loading history:', e);
+      document.getElementById('historyContainer').innerHTML = "<p>Error loading data. Please try again.</p>";
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', loadHistory);
+</script>
+</body>
+</html>

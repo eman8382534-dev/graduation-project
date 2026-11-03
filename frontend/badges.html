@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Growia – My Badges & Level</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="script.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --pink:   #FF8A8A;
+            --yellow: #FFD97D;
+            --teal:   #4DB6AC;
+            --bg:     #f5f9f5;
+            --card:   #ffffff;
+            --text:   #2d4a43;
+            --muted:  #8fa0a2;
+        }
+
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: 60px;
+        }
+
+        /* ── Header ── */
+        .page-header {
+            background: linear-gradient(135deg, #FF8A8A 0%, #FFB7B2 100%);
+            color: #fff;
+            padding: 28px 20px 40px;
+            border-radius: 0 0 40px 40px;
+            box-shadow: 0 6px 24px rgba(255,138,128,.25);
+        }
+        .header-inner { max-width: 860px; margin: 0 auto; }
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,.22); color: #fff;
+            border: 1.5px solid rgba(255,255,255,.4);
+            padding: 8px 18px; border-radius: 20px;
+            font-weight: 700; font-size: 14px; cursor: pointer;
+            text-decoration: none; transition: background .2s;
+        }
+        .back-btn:hover { background: rgba(255,255,255,.32); }
+
+        .hero-row {
+            display: flex; align-items: center; gap: 20px; margin-top: 22px; flex-wrap: wrap;
+        }
+        .avatar-ring {
+            width: 88px; height: 88px; background: rgba(255,255,255,.18);
+            border: 3px solid var(--yellow); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.6rem; position: relative; flex-shrink: 0;
+        }
+        .avatar-ring .lv-pip {
+            position: absolute; bottom: -6px; right: -2px;
+            background: var(--yellow); color: #7a5000;
+            font-size: 11px; font-weight: 700; padding: 2px 9px;
+            border-radius: 12px; border: 2px solid #fff; white-space: nowrap;
+        }
+        .hero-meta h1 { font-size: 1.9rem; font-weight: 700; line-height: 1.1; }
+        .hero-meta .sub { font-size: .88rem; color: rgba(255,255,255,.82); margin-top: 3px; }
+
+        /* Level progress strip */
+        .level-strip {
+            display: flex; align-items: center; gap: 12px; margin-top: 14px;
+            background: rgba(255,255,255,.15); border-radius: 16px; padding: 10px 16px;
+        }
+        .level-strip .lv-name { font-size: .85rem; font-weight: 700; white-space: nowrap; }
+        .level-strip .exp-bar-wrap { flex: 1; background: rgba(255,255,255,.3); border-radius: 10px; height: 10px; overflow: hidden; }
+        .level-strip .exp-bar-fill { height: 100%; background: var(--yellow); border-radius: 10px; transition: width .8s ease; width: 0%; }
+        .level-strip .exp-pct { font-size: .78rem; font-weight: 700; white-space: nowrap; }
+
+        /* ── Main layout ── */
+        .main { max-width: 860px; margin: 28px auto 0; padding: 0 16px; display: flex; flex-direction: column; gap: 24px; }
+
+        /* ── Cards ── */
+        .card {
+            background: var(--card); border-radius: 28px; padding: 22px;
+            box-shadow: 0 4px 20px rgba(0,0,0,.04); border: 1px solid #edf4ee;
+        }
+        .card-head { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+        .card-sub  { font-size: .78rem; color: var(--muted); margin-bottom: 18px; }
+
+        /* ── Level summary stats ── */
+        .stats-row {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 4px;
+        }
+        .stat-box {
+            background: #f8faf8; border-radius: 18px; padding: 16px 12px; text-align: center;
+            border: 1px solid #edf2ed;
+        }
+        .stat-box .s-val  { font-size: 1.5rem; font-weight: 700; color: var(--text); }
+        .stat-box .s-lbl  { font-size: .72rem; color: var(--muted); font-weight: 600; margin-top: 2px; }
+
+        /* trust score colour */
+        .trust-high  { color: #10b981 !important; }
+        .trust-mid   { color: #f59e0b !important; }
+        .trust-low   { color: #ef4444 !important; }
+
+        /* ── Pillar badges grid ── */
+        .pillar-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+        }
+        @media (max-width: 560px) { .pillar-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        .pillar-cell {
+            background: #fff; border-radius: 18px; padding: 12px 8px 10px; text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,.06); cursor: pointer;
+            transition: transform .18s, box-shadow .18s;
+            position: relative;
+        }
+        .pillar-cell:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,.1); }
+        .pillar-cell.locked { opacity: .55; }
+
+        .ring-wrap {
+            width: 52px; height: 52px; border-radius: 50%; margin: 0 auto 8px;
+            display: flex; align-items: center; justify-content: center; position: relative;
+        }
+        .ring-inner {
+            width: 38px; height: 38px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+        }
+        .crown { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); font-size: .65rem; }
+
+        .p-name  { font-size: .68rem; font-weight: 700; color: #555; line-height: 1.25; }
+        .p-tier  { font-size: .62rem; color: #aaa; margin-top: 2px; }
+        .p-bar   { height: 5px; background: #f0f0f0; border-radius: 3px; margin-top: 6px; overflow: hidden; }
+        .p-bar-fill { height: 100%; border-radius: 3px; transition: width .6s ease; }
+
+        /* Tooltip */
+        .p-tooltip {
+            display: none; position: absolute; bottom: calc(100% + 8px); left: 50%;
+            transform: translateX(-50%); background: #2d4a43; color: #fff;
+            font-size: .72rem; line-height: 1.4; padding: 8px 12px; border-radius: 12px;
+            white-space: pre-line; min-width: 160px; max-width: 200px;
+            box-shadow: 0 4px 16px rgba(0,0,0,.18); z-index: 10; text-align: left;
+            pointer-events: none;
+        }
+        .pillar-cell:hover .p-tooltip,
+        .pillar-cell:focus .p-tooltip  { display: block; }
+
+        /* Suggestion banner */
+        .suggestion-banner {
+            display: none; background: linear-gradient(135deg,#fff8dc,#fff3e0);
+            border-radius: 14px; padding: 11px 16px; margin-bottom: 16px;
+            font-size: .8rem; color: #7a5000; font-weight: 600;
+            border-left: 3px solid var(--yellow); line-height: 1.5;
+        }
+
+        /* ── Unlocked badges (challenge-based) ── */
+        .unlocked-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 14px;
+        }
+        .unlocked-cell {
+            background: #fffbe6; border: 1.5px solid var(--yellow); border-radius: 20px;
+            padding: 14px 10px; text-align: center; cursor: default;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
+            transition: transform .15s;
+        }
+        .unlocked-cell:hover { transform: translateY(-2px); }
+        .unlocked-cell .u-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; line-height:1; }
+        .unlocked-cell .u-icon svg { width:2rem; height:2rem; display:block; margin:0 auto; }
+        .unlocked-cell .u-name { font-size: .72rem; font-weight: 700; color: #7a5000; line-height: 1.3; }
+        .unlocked-cell .u-date { font-size: .62rem; color: #bbb; margin-top: 3px; }
+
+        .empty-state { text-align: center; padding: 30px 20px; color: var(--muted); font-size: .9rem; }
+
+        /* ── Level milestones ── */
+        .milestones-row {
+            display: flex; gap: 8px; justify-content: space-between; flex-wrap: wrap; margin-bottom: 18px;
+        }
+        .ms-node {
+            flex: 1; min-width: 50px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+        }
+        .ms-circle {
+            width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-size: 1rem; font-weight: 700; transition: box-shadow .3s;
+        }
+        .ms-circle.done   { background: var(--yellow); color: #7a5000; box-shadow: 0 3px 0 #c49a00; }
+        .ms-circle.active { background: var(--yellow); color: #7a5000; box-shadow: 0 0 0 6px rgba(255,217,125,.3), 0 3px 0 #c49a00; }
+        .ms-circle.locked { background: #e8e8e8; color: #ccc; box-shadow: 0 3px 0 #ccc; filter: grayscale(1); opacity: .55; }
+        .ms-label { font-size: .62rem; font-weight: 700; text-align: center; line-height: 1.2; }
+
+        /* ── Challenge list per level ── */
+        .chal-list { display: flex; flex-direction: column; gap: 10px; }
+        .chal-row {
+            display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+            border-radius: 14px; background: #f8faf8; border: 1px solid #edf2ed;
+        }
+        .chal-icon { font-size: 1.1rem; flex-shrink: 0; width: 22px; text-align: center; }
+        .chal-body { flex: 1; }
+        .chal-text { font-size: .82rem; font-weight: 600; color: #333; line-height: 1.3; }
+        .chal-text.done-text { text-decoration: line-through; color: #aaa; }
+        .chal-text.lock-text { color: #ccc; }
+        .chal-bar-wrap { height: 5px; background: rgba(0,0,0,.08); border-radius: 3px; overflow: hidden; margin-top: 4px; }
+        .chal-bar-fill { height: 100%; border-radius: 3px; transition: width .5s; }
+        .chal-prog { font-size: .68rem; color: #999; white-space: nowrap; flex-shrink: 0; }
+
+        /* ── Challenge progress list ── */
+        .cp-row {
+            display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+            border-radius: 14px; background: #f8faf8; border: 1px solid #edf2ed; margin-bottom: 8px;
+        }
+        .cp-body { flex: 1; min-width: 0; }
+        .cp-title { font-size: .82rem; font-weight: 600; color: #333; line-height: 1.3; }
+        .cp-badge { font-size: .68rem; color: var(--muted); margin-top: 2px; }
+        .cp-bar-wrap { height: 5px; background: rgba(0,0,0,.08); border-radius: 3px; overflow: hidden; margin-top: 5px; }
+        .cp-bar-fill { height: 100%; border-radius: 3px; background: var(--teal); transition: width .5s; }
+        .cp-pct { font-size: .72rem; font-weight: 700; color: var(--teal); white-space: nowrap; }
+
+        /* ── Journal scoring section ── */
+        .score-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px;
+        }
+        .score-item {
+            background: #f8faf8; border-radius: 16px; padding: 14px 16px;
+            border: 1px solid #edf2ed;
+        }
+        .score-item .si-label { font-size: .72rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
+        .score-item .si-val   { font-size: 1.3rem; font-weight: 700; color: var(--text); margin-top: 2px; }
+        .score-item .si-bar   { height: 6px; background: #f0f0f0; border-radius: 3px; margin-top: 8px; overflow: hidden; }
+        .score-item .si-bar-fill { height: 100%; border-radius: 3px; background: var(--teal); transition: width .6s ease; }
+
+        /* ── Skeletons ── */
+        .skeleton { background: linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 8px; }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+        /* ── Loading overlay ── */
+        #loadingOverlay {
+            position: fixed; inset: 0; background: rgba(245,249,245,.9);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 16px; z-index: 100;
+        }
+        #loadingOverlay.hidden { display: none; }
+        .spinner {
+            width: 44px; height: 44px; border: 4px solid #e0e0e0;
+            border-top-color: var(--pink); border-radius: 50%;
+            animation: spin .7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Error banner ── */
+        #errorBanner {
+            display: none; background: #fef2f2; border: 1.5px solid #fca5a5;
+            color: #b91c1c; border-radius: 16px; padding: 14px 18px;
+            font-size: .85rem; font-weight: 600; margin: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div id="loadingOverlay">
+    <div class="spinner"></div>
+    <span style="font-size:.9rem;color:var(--muted);font-weight:600;">Loading your badges…</span>
+</div>
+
+<!-- Error banner -->
+<div id="errorBanner"></div>
+
+<!-- ══════════════════════════════════════
+     PAGE HEADER
+════════════════════════════════════════ -->
+<header class="page-header">
+    <div class="header-inner">
+        <a href="leafy.html" class="back-btn">← Back to Home</a>
+
+        <div class="hero-row">
+            <div class="avatar-ring">
+                <span id="avatarEmoji">🌱</span>
+                <span class="lv-pip" id="lvPip">Lv.1</span>
+            </div>
+            <div class="hero-meta">
+                <h1 id="heroName">My Badges &amp; Level</h1>
+                <div class="sub" id="heroSub">Loading profile…</div>
+            </div>
+        </div>
+
+        <!-- EXP progress bar -->
+        <div class="level-strip" id="levelStrip">
+            <span class="lv-name" id="lvName">Level 1 – The Sprout</span>
+            <div class="exp-bar-wrap">
+                <div class="exp-bar-fill" id="expFill"></div>
+            </div>
+            <span class="exp-pct" id="expPct">0%</span>
+        </div>
+    </div>
+</header>
+
+<!-- ══════════════════════════════════════
+     MAIN CONTENT
+════════════════════════════════════════ -->
+<main class="main">
+
+    <!-- ── Challenge progress (BadgeLevel API) ── -->
+    <section class="card" id="challengeProgressCard">
+        <div class="card-head">🎯 Challenge Progress</div>
+        <div class="card-sub">Live progress toward every badge challenge</div>
+        <div id="challengeProgressList">
+            <div class="skeleton" style="height:60px;border-radius:14px;margin-bottom:8px;"></div>
+            <div class="skeleton" style="height:60px;border-radius:14px;"></div>
+        </div>
+    </section>
+
+    <!-- ── Level summary: badge count | trust score | next requirement ── -->
+    <section class="card">
+        <div class="card-head">🗺️ Level Summary</div>
+        <div class="card-sub">Your current standing at a glance</div>
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="s-val" id="statBadgeCount">–</div>
+                <div class="s-lbl">Badges Earned</div>
+            </div>
+            <div class="stat-box">
+                <div class="s-val" id="statTrustScore">–</div>
+                <div class="s-lbl">Trust Score</div>
+            </div>
+            <div class="stat-box">
+                <div class="s-val" id="statStreak">–</div>
+                <div class="s-lbl">Day Streak 🔥</div>
+            </div>
+        </div>
+
+        <!-- Next level requirement hint -->
+        <div id="nextHint" style="margin-top:14px;padding:12px 16px;background:#f0fdf4;border-radius:14px;
+             font-size:.82rem;color:#166534;font-weight:600;line-height:1.5;display:none;"></div>
+    </section>
+
+    <!-- ── PHASE 12: AI Recommended Badge (Weekly Badge Recommender) ── -->
+    <section class="card" id="aiRecommendedBadgeSection" style="display:none;">
+        <div class="card-head">🤖 Leafy Recommends</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:6px 0;">
+            <span style="font-size:2rem;" id="aiRecBadgeIcon">🏅</span>
+            <div>
+                <div style="font-weight:700;color:#166534;" id="aiRecBadgeName">–</div>
+                <div style="font-size:.78rem;color:var(--muted);" id="aiRecBadgeDesc">–</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Level Milestones ── -->
+    <section class="card">
+        <div class="card-head">⭐ Level Journey</div>
+        <div class="card-sub">Complete all challenges to climb to the next level</div>
+
+        <div class="milestones-row" id="milestonesRow">
+            <!-- populated from /Children/journey-progress -->
+        </div>
+
+        <!-- Active level challenges -->
+        <div id="activeLevelLabel" style="font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;
+             letter-spacing:.4px;margin-bottom:10px;"></div>
+        <!-- PHASE 10 REFACTOR: DB-driven required_badges / min_trust_score summary -->
+        <div id="levelRequirementsHint" style="font-size:.78rem;color:var(--muted);margin-bottom:10px;display:none;"></div>
+        <div class="chal-list" id="chalList">
+            <!-- populated from journey-progress.levelDefinitions -->
+        </div>
+
+        <a href="journey.html" style="display:block;text-align:center;margin-top:16px;
+           font-size:.82rem;font-weight:700;color:var(--teal);text-decoration:none;">
+            See full journey map →
+        </a>
+    </section>
+
+    <!-- ── Pillar Badges ── -->
+    <section class="card">
+        <div class="card-head">🏅 Pillar Badges</div>
+        <div class="card-sub">Earn Bronze → Silver → Gold by journaling your growth every day</div>
+
+        <div class="suggestion-banner" id="suggestionBanner"></div>
+
+        <div class="pillar-grid" id="pillarGrid">
+            <!-- 8 skeleton placeholders -->
+            <div class="skeleton" style="height:110px;border-radius:18px;"></div>
+            <div class="skeleton" style="height:110px;border-radius:18px;"></div>
+            <div class="skeleton" style="height:110px;border-radius:18px;"></div>
+            <div class="skeleton" style="height:110px;border-radius:18px;"></div>
+            <div class="skeleton" style="height:110px;border-radius:18px;"></div>
+            <div class="skeleton" style="height:110px;border-radius:18px;"></div>
+            <div class="skeleton" style="height:110px;border-radius:18px;"></div>
+            <div class="skeleton" style="height:110px;border-radius:18px;"></div>
+        </div>
+    </section>
+
+    <!-- ── All badges (unified: unlocked + locked-with-progress) ── -->
+    <section class="card">
+        <div class="card-head">🎖️ All Badges</div>
+        <div class="card-sub">Earned badges plus your live progress toward every locked badge</div>
+
+        <div id="unlockedGrid" class="unlocked-grid">
+            <div class="skeleton" style="height:100px;border-radius:20px;"></div>
+            <div class="skeleton" style="height:100px;border-radius:20px;"></div>
+            <div class="skeleton" style="height:100px;border-radius:20px;"></div>
+        </div>
+    </section>
+
+    <!-- ── Journal scoring breakdown ── -->
+    <section class="card" id="journalScoringCard">
+        <div class="card-head">📓 How Your Journal Builds Your Score</div>
+        <div class="card-sub">Each section you fill in today pushes your trait scores higher</div>
+
+        <div class="score-grid" id="scoreGrid">
+            <div class="skeleton" style="height:90px;border-radius:16px;"></div>
+            <div class="skeleton" style="height:90px;border-radius:16px;"></div>
+            <div class="skeleton" style="height:90px;border-radius:16px;"></div>
+            <div class="skeleton" style="height:90px;border-radius:16px;"></div>
+            <div class="skeleton" style="height:90px;border-radius:16px;"></div>
+        </div>
+
+        <div style="margin-top:16px;padding:12px 14px;background:#fffbe6;border-radius:14px;
+             font-size:.8rem;color:#856404;border-left:3px solid var(--yellow);">
+            💡 Fill in more sections of your daily journal to unlock badges and level up faster!
+        </div>
+    </section>
+
+</main>
+
+<!-- ══════════════════════════════════════
+     JAVASCRIPT — full backend integration
+════════════════════════════════════════ -->
+<script>
+'use strict';
+
+/* ── Auth guard ── */
+if (!getChildToken()) {
+    window.location.href = 'child_login.html';
+}
+
+/* ── Constants ── */
+const TIER_MEDAL  = ['🔒', '🥉', '🥈', '🥇'];
+const TIER_LABEL  = ['Locked', 'Bronze', 'Silver', 'Gold'];
+const TIER_SHADOW = ['#bbb', '#a0522d', '#999', '#c49a00'];
+
+/* ── Boot ── */
+document.addEventListener('DOMContentLoaded', init);
+
+async function init() {
+    try {
+        await Promise.allSettled([
+            loadProfile(),
+            loadJourneyProgress(),
+            loadChallengeProgress(),
+            loadPillarBadges(),
+            loadAllBadges(),
+            loadJournalScoring(),
+            loadAiRecommendedBadge()
+        ]);
+    } finally {
+        hide('loadingOverlay');
+    }
+}
+
+/* ─────────────────────────────────────────────
+   PHASE 12 — AI Recommended Badge (weekly Badge Recommender)
+───────────────────────────────────────────── */
+async function loadAiRecommendedBadge() {
+    try {
+        const res = await childAuthFetch('/Children/recommended-badge');
+        if (!res || !res.ok) return;
+        const b = await res.json();
+        if (!b || !b.badgeId) return; // AI hasn't recommended one yet
+
+        document.getElementById('aiRecBadgeIcon').textContent = b.badgeIcon || '🏅';
+        document.getElementById('aiRecBadgeName').textContent =
+            b.alreadyUnlocked ? `${b.badgeName} (already unlocked! 🎉)` : b.badgeName;
+        document.getElementById('aiRecBadgeDesc').textContent = b.description || '';
+        document.getElementById('aiRecommendedBadgeSection').style.display = '';
+    } catch (e) { console.error('AI recommended badge load failed', e); }
+}
+
+/* ─────────────────────────────────────────────
+   1. PROFILE  →  header + level strip + stats
+───────────────────────────────────────────── */
+async function loadProfile() {
+    const res = await childAuthFetch('/Children/profile');
+    if (!res || !res.ok) return;
+    const p = await res.json();
+
+    // Avatar
+    setText('avatarEmoji', p.characterType || '🌱');
+
+    // Level pip + hero name
+    const lv = p.level || 1;
+    setText('lvPip', `Lv.${lv}`);
+    setText('heroName', (p.fullName || 'Hero') + "'s Badges");
+    setText('heroSub', buildLevelTitle(lv)); // Will be overwritten by journey data with DB name
+
+    // TrustScore (computed or AI-set) — NOT MeanScore
+    const ts  = p.trustScore != null ? p.trustScore : null;
+    const tsEl = document.getElementById('statTrustScore');
+    if (tsEl) {
+        if (ts != null) {
+            tsEl.textContent = ts + '/100';
+            tsEl.className   = 's-val ' + (ts >= 70 ? 'trust-high' : ts >= 40 ? 'trust-mid' : 'trust-low');
+        } else {
+            tsEl.textContent = '–';
+            tsEl.className   = 's-val';
+        }
+    }
+
+    // Journal scoring: show trait values so child understands what drives score
+    renderTraitScoring(p);
+}
+
+// DB-sourced level names — updated from journey-progress API when loaded.
+// Fallback mirrors the seeded Level.Name values from the DB.
+const _dbLevelNames = {
+    1: 'The Sprout',
+    2: 'Week One Hero',
+    3: 'Kindness Bloom',
+    4: 'Sunshine Star',
+    5: 'Champion',
+    6: 'Grawiaa Legend'
+};
+
+function buildLevelTitle(lv, nameFromApi) {
+    // Use API-provided name if available (comes from journey-progress levelDefinitions),
+    // then fallback to seeded DB names, then generic.
+    const name = nameFromApi || _dbLevelNames[lv] || `Hero Level ${lv}`;
+    return `Level ${lv} – ${name}`;
+}
+
+function renderTraitScoring(p) {
+    const traits = [
+        { key: 'spiritual',  label: 'Spiritual',  icon: '🕌', val: p.spiritualTrait  ?? 0, desc: 'Prayer & spiritual connection' },
+        { key: 'kindness',   label: 'Kindness',   icon: '💛', val: p.kindnessTrait   ?? 0, desc: 'Helping family & friends' },
+        { key: 'curiosity',  label: 'Curiosity',  icon: '📚', val: p.curiosityTrait  ?? 0, desc: 'Homework & learning' },
+        { key: 'vitality',   label: 'Vitality',   icon: '⚽', val: p.vitalityTrait   ?? 0, desc: 'Exercise & nutrition' },
+        { key: 'resilience', label: 'Resilience', icon: '🌈', val: p.resilienceTrait ?? 0, desc: 'Mood & emotional health' },
+    ];
+
+    const grid = document.getElementById('scoreGrid');
+    if (!grid) return;
+
+    grid.innerHTML = traits.map(t => {
+        const pct = Math.min(100, Math.max(0, Math.round(t.val)));
+        const barColor = pct >= 70 ? '#10b981' : pct >= 40 ? '#f59e0b' : '#FF8A8A';
+        return `
+        <div class="score-item">
+            <div class="si-label">${t.icon} ${t.label}</div>
+            <div class="si-val">${pct}<span style="font-size:.8rem;font-weight:600;color:var(--muted)">%</span></div>
+            <div style="font-size:.68rem;color:var(--muted);margin-top:1px;">${t.desc}</div>
+            <div class="si-bar">
+                <div class="si-bar-fill" style="width:${pct}%;background:${barColor};"></div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+/* ─────────────────────────────────────────────
+   CHALLENGE PROGRESS — GET /api/BadgeLevel/progress
+───────────────────────────────────────────── */
+async function loadChallengeProgress() {
+    const listEl = document.getElementById('challengeProgressList');
+    const cardEl = document.getElementById('challengeProgressCard');
+    if (!listEl) return;
+
+    try {
+        const res = await childAuthFetch('/BadgeLevel/progress');
+        if (!res || !res.ok) {
+            listEl.innerHTML = '<p class="empty-state" style="padding:16px;">Challenge progress unavailable right now. Your badges still load below.</p>';
+            return;
+        }
+
+        const data = await res.json();
+        const items = Array.isArray(data.progress) ? data.progress : [];
+
+        if (items.length === 0) {
+            listEl.innerHTML = '<p class="empty-state" style="padding:16px;">No challenge progress yet — start journaling to unlock challenges!</p>';
+            return;
+        }
+
+        const top = items
+            .filter(p => !p.is_completed)
+            .sort((a, b) => (b.progress_pct || 0) - (a.progress_pct || 0))
+            .slice(0, 8);
+
+        const show = top.length > 0 ? top : items.slice(0, 5);
+
+        listEl.innerHTML = show.map(p => {
+            const pct = Math.min(100, Math.round(p.progress_pct || 0));
+            const done = p.is_completed;
+            return `
+            <div class="cp-row" style="${done ? 'opacity:.7;' : ''}">
+                <div class="cp-body">
+                    <div class="cp-title">${done ? '✅ ' : ''}${escHtml(p.challenge_text || 'Challenge')}</div>
+                    <div class="cp-badge">${escHtml(p.badge_name || '')}</div>
+                    <div class="cp-bar-wrap">
+                        <div class="cp-bar-fill" style="width:${pct}%;${done ? 'background:#66bb6a;' : ''}"></div>
+                    </div>
+                </div>
+                <span class="cp-pct">${Math.round(p.current_value || 0)}/${p.target_value || 0}</span>
+            </div>`;
+        }).join('');
+
+        const sub = cardEl?.querySelector('.card-sub');
+        if (sub && data.completed_challenges != null)
+            sub.textContent = `${data.completed_challenges} of ${data.total_challenges} challenges completed`;
+
+    } catch (e) {
+        console.warn('[badges] challenge progress error:', e);
+        listEl.innerHTML = '<p class="empty-state" style="padding:16px;">Could not load challenge progress. Please try again later.</p>';
+    }
+}
+
+/* ─────────────────────────────────────────────
+   2. JOURNEY PROGRESS  →  level strip + milestones + challenges + stats
+───────────────────────────────────────────── */
+async function loadJourneyProgress() {
+    const res = await childAuthFetch('/Children/journey-progress');
+    if (!res || !res.ok) return;
+    const d = await res.json();
+
+    const currentLevel = d.currentLevel       || 1;
+    const levelName    = d.currentLevelName   || 'The Sprout';
+    const expPct       = d.progressPercentage || 0;
+    const levelDefs    = Array.isArray(d.levelDefinitions) ? d.levelDefinitions : [];
+    const totalLogs    = d.totalLogs          || 0;
+    const streak       = d.currentStreak      || 0;
+
+    // Level strip — use API-provided levelName (from DB Levels table)
+    setText('lvName',  `Level ${currentLevel} – ${levelName}`);
+    setText('lvPip',   `Lv.${currentLevel}`);
+    setText('heroSub', buildLevelTitle(currentLevel, levelName));
+    setWidth('expFill', expPct);
+    setText('expPct',  expPct + '%');
+
+    // Stats row: badge count filled later; streak from here
+    setText('statStreak', streak);
+
+    // Next challenge hint
+    const reqs = Array.isArray(d.nextLevelRequirements) ? d.nextLevelRequirements : [];
+    const nextIncomplete = reqs.find(r => !r.completed);
+    const hintEl = document.getElementById('nextHint');
+    if (hintEl) {
+        if (nextIncomplete) {
+            hintEl.textContent = `${nextIncomplete.emoji || '🎯'} Next: ${nextIncomplete.text}`;
+            hintEl.style.display = 'block';
+        } else if (currentLevel >= 6) {
+            hintEl.textContent = '🌟 You have reached the highest level — you are a Growia Legend!';
+            hintEl.style.display = 'block';
+        }
+    }
+
+    // Milestone nodes
+    renderMilestones(levelDefs, currentLevel);
+
+    // Active level challenges
+    const activeDef = levelDefs.find(lv => lv.isActive) || levelDefs.find(lv => lv.levelNumber === currentLevel);
+    renderChallenges(activeDef, currentLevel);
+}
+
+function renderMilestones(levelDefs, currentLevel) {
+    const row = document.getElementById('milestonesRow');
+    if (!row || !levelDefs.length) return;
+
+    row.innerHTML = levelDefs.map(lv => {
+        const state = lv.isDone ? 'done' : lv.isActive ? 'active' : 'locked';
+        const icon  = lv.isDone ? '✓' : lv.isLocked ? '🔒' : (lv.emoji || '⭐');
+        const col   = lv.isDone ? '#388E3C' : lv.isActive ? '#e6536f' : '#bbb';
+        return `
+        <div class="ms-node">
+            <div class="ms-circle ${state}">${icon}</div>
+            <span class="ms-label" style="color:${col};">${lv.name || ('Lv ' + lv.levelNumber)}</span>
+        </div>`;
+    }).join('');
+}
+
+function renderChallenges(levelDef, currentLevel) {
+    const labelEl = document.getElementById('activeLevelLabel');
+    const listEl  = document.getElementById('chalList');
+    if (!labelEl || !listEl) return;
+
+    if (!levelDef) {
+        labelEl.textContent = '';
+        listEl.innerHTML = '<p style="font-size:.82rem;color:var(--muted);">No active challenges found.</p>';
+        return;
+    }
+
+    const challenges = Array.isArray(levelDef.challenges) ? levelDef.challenges : [];
+    const isDone     = levelDef.isDone;
+    const isActive   = levelDef.isActive;
+    const titleColor = levelDef.titleColor || 'var(--teal)';
+
+    labelEl.textContent = isDone
+        ? `✅ Level ${levelDef.levelNumber} – ${levelDef.name} (Complete)`
+        : `🎯 Level ${levelDef.levelNumber} – ${levelDef.name} (In Progress)`;
+
+    // PHASE 10 REFACTOR — DB-driven level requirements (required_badges /
+    // min_trust_score), sourced from journey-progress.levelDefinitions
+    // via ILevelRulesProvider. Shown for the active (in-progress) level.
+    const reqEl = document.getElementById('levelRequirementsHint');
+    if (reqEl) {
+        if (!isDone && levelDef.requiredBadges != null) {
+            const badgePart = levelDef.requiredBadges > 0
+                ? `Complete ${levelDef.requiredBadges} challenge${levelDef.requiredBadges === 1 ? '' : 's'} for this level's badge`
+                : `No badge-challenge requirement for this level`;
+
+            // Use minTrustScoreNormalized (0.0-1.0) if available, else minTrustScore (0-100 integer)
+            let trustDisplay = '';
+            if (levelDef.minTrustScoreNormalized != null && levelDef.minTrustScoreNormalized > 0) {
+                trustDisplay = ` and keep Trust Score ≥ ${Math.round(levelDef.minTrustScoreNormalized * 100)}%`;
+            } else if (levelDef.minTrustScore != null && levelDef.minTrustScore > 0) {
+                trustDisplay = ` and keep Trust Score ≥ ${levelDef.minTrustScore}`;
+            }
+
+            const metBadge = levelDef.requiredBadgesMet ? ' ✅' : '';
+            reqEl.textContent = `${badgePart}${trustDisplay} to level up.${metBadge}`;
+            reqEl.style.display = 'block';
+        } else {
+            reqEl.style.display = 'none';
+        }
+    }
+
+    if (!challenges.length) {
+        listEl.innerHTML = '<p style="font-size:.82rem;color:var(--muted);">No challenges yet — keep journaling!</p>';
+        return;
+    }
+
+    listEl.innerHTML = challenges.map((ch, i) => {
+        if (isDone || ch.completed) {
+            return `
+            <div class="chal-row">
+                <span class="chal-icon" style="color:#66bb6a;">✓</span>
+                <div class="chal-body">
+                    <div class="chal-text done-text">${escHtml(ch.text || '')}</div>
+                </div>
+            </div>`;
+        }
+        if (isActive) {
+            const showBar = (ch.target || 0) > 1;
+            const barPct  = showBar ? Math.min(100, Math.round(((ch.current || 0) / ch.target) * 100)) : 0;
+            return `
+            <div class="chal-row">
+                <span class="chal-icon" style="background:rgba(0,0,0,.07);border-radius:50%;
+                      width:22px;height:22px;display:flex;align-items:center;justify-content:center;
+                      font-size:.72rem;font-weight:700;color:#888;">${i + 1}</span>
+                <div class="chal-body">
+                    <div class="chal-text">${escHtml(ch.text || '')}</div>
+                    ${showBar ? `
+                    <div class="chal-bar-wrap">
+                        <div class="chal-bar-fill" style="width:${barPct}%;background:${titleColor};"></div>
+                    </div>` : ''}
+                </div>
+                ${showBar ? `<span class="chal-prog">${Math.round(ch.current||0)}/${ch.target}</span>` : ''}
+            </div>`;
+        }
+        return `
+        <div class="chal-row" style="opacity:.5;">
+            <span class="chal-icon">🔒</span>
+            <div class="chal-body"><div class="chal-text lock-text">${escHtml(ch.text || '')}</div></div>
+        </div>`;
+    }).join('');
+}
+
+/* ─────────────────────────────────────────────
+   3. PILLAR BADGES  →  8-cell grid (pillar-detail)
+   FIX (Phase 14): /Children/pillar-badges was removed because it
+   queried MetricType == "pillar_pct" challenges which don't exist in
+   the seeded data, always returning an empty array. Replaced with
+   /Children/pillar-detail which returns live FinalXxx_Pct hybrid
+   values (70% structured + 30% NLP) for all 8 pillars.
+   Tier Bronze/Silver/Gold display is preserved using the same
+   30/60/85 pct thresholds; tiers are now computed client-side.
+───────────────────────────────────────────── */
+async function loadPillarBadges() {
+    const grid = document.getElementById('pillarGrid');
+    if (!grid) return;
+
+    // Static pillar metadata — icon, label, color, API field key
+    const PILLAR_META = [
+        { key: 'academic',        label: 'Academic',   icon: '📚', color: '#42A5F5' },
+        { key: 'social',          label: 'Social',     icon: '🤝', color: '#66BB6A' },
+        { key: 'mental',          label: 'Mental',     icon: '🧠', color: '#AB47BC' },
+        { key: 'physicalHealth',  label: 'Physical',   icon: '💪', color: '#FF7043' },
+        { key: 'spiritual',       label: 'Spiritual',  icon: '🕋', color: '#26C6DA' },
+        { key: 'environmental',   label: 'Home',       icon: '🏡', color: '#8D6E63' },
+        { key: 'creativity',      label: 'Creativity', icon: '🎨', color: '#FFCA28' },
+        { key: 'physicalActivity',label: 'Activity',   icon: '⚡', color: '#EC407A' },
+    ];
+
+    try {
+        const res = await childAuthFetch('/Children/pillar-detail');
+        if (!res || !res.ok) throw new Error('pillar-detail failed');
+        const data  = await res.json();
+        const final = data.final || {};
+
+        grid.innerHTML = PILLAR_META.map(meta => {
+            const pct    = Math.min(100, Math.round(final[meta.key] || 0));
+            const tier   = pct >= 85 ? 3 : pct >= 60 ? 2 : pct >= 30 ? 1 : 0;
+            const locked = tier === 0;
+            const bgColor = locked ? '#e8e8e8' : meta.color;
+            const shadow  = TIER_SHADOW[tier];
+
+            const prevTgt = tier === 0 ? 0 : tier === 1 ? 30 : tier === 2 ? 60 : 85;
+            const nextTgt = tier === 0 ? 30 : tier === 1 ? 60 : tier === 2 ? 85 : 100;
+            const ringPct = tier >= 3 ? 100
+                : Math.min(100, Math.round(((pct - prevTgt) / (nextTgt - prevTgt)) * 100));
+
+            const tipText = `${meta.label}\n${TIER_LABEL[tier]}\n${pct}% hybrid score`;
+
+            return `
+            <div class="pillar-cell${locked ? ' locked' : ''}" tabindex="0">
+                <div class="ring-wrap" style="
+                    background: conic-gradient(
+                        ${tier >= 3 ? '#FFD700' : bgColor} ${ringPct * 3.6}deg,
+                        #f0f0f0 0deg
+                    );
+                    box-shadow: 0 3px 0 ${shadow};
+                    filter: ${locked ? 'grayscale(1)' : 'none'};
+                ">
+                    ${tier === 3 ? '<span class="crown">👑</span>' : ''}
+                    <div class="ring-inner" style="background:${locked ? '#ddd' : bgColor};">
+                        ${meta.icon}
+                    </div>
+                </div>
+                <div class="p-name">${escHtml(meta.label)}</div>
+                <div class="p-tier">${TIER_MEDAL[tier]} ${TIER_LABEL[tier]}</div>
+                <div class="p-bar">
+                    <div class="p-bar-fill" style="width:${ringPct}%;background:${tier >= 3 ? '#FFD700' : bgColor};"></div>
+                </div>
+                <div class="p-tooltip">${escHtml(tipText)}</div>
+            </div>`;
+        }).join('');
+
+    } catch (e) {
+        console.warn('[badges] pillar badges error:', e);
+        if (grid) grid.innerHTML = '<p class="empty-state">Could not load pillar badges. Please try again later.</p>';
+    }
+}
+
+/* ─────────────────────────────────────────────
+   4. ALL BADGES (unified challenge engine)
+   PHASE 10 REFACTOR: single source — /Children/all-badges.
+   Renders unlocked badges normally, and locked badges as
+   greyed cells with a live challenge-progress bar. This
+   replaces the old /Children/my-badges-only view so there
+   is exactly ONE badge data source on this page (plus the
+   display-only pillar-badges projection above, which reads
+   from the same underlying challenge data).
+   SPEC UPDATE: badges now open a detail modal via
+   /api/BadgeLevel/badges/{id} which includes hashed_child_id,
+   per-challenge progress with unlocked_at, and overall %.
+───────────────────────────────────────────── */
+async function loadAllBadges() {
+    const grid = document.getElementById('unlockedGrid');
+    if (!grid) return;
+
+    try {
+        const res = await childAuthFetch('/Children/all-badges');
+        if (!res || !res.ok) throw new Error('all-badges failed');
+        const badges = await res.json();
+
+        if (!Array.isArray(badges)) throw new Error('unexpected all-badges response');
+
+        const unlocked = badges.filter(b => b.isUnlocked);
+        const locked   = badges.filter(b => !b.isUnlocked);
+
+        // Update badge count stat (unlocked count only)
+        setText('statBadgeCount', unlocked.length);
+
+        if (badges.length === 0) {
+            grid.innerHTML = `
+            <div class="empty-state" style="grid-column:1/-1;">
+                <div style="font-size:2rem;margin-bottom:8px;">🌱</div>
+                No badges configured yet.
+            </div>`;
+            return;
+        }
+
+        // Unlocked first (newest first), then locked badges with progress
+        const sortedUnlocked = unlocked
+            .slice()
+            .sort((a, b) => new Date(b.unlockedAt) - new Date(a.unlockedAt));
+
+        const unlockedHtml = sortedUnlocked.map(b => {
+            const dateStr = b.unlockedAt ? formatDate(b.unlockedAt) : '';
+            return `
+            <div class="unlocked-cell" title="${escHtml(b.description || '')}"
+                 style="cursor:pointer;" onclick="openBadgeDetail(${b.id || b.badgeId || 0})">
+                <span class="u-icon">${renderIcon(b.iconUrl, '🏅')}</span>
+                <div class="u-name">${escHtml(b.name || 'Badge')}</div>
+                ${dateStr ? `<div class="u-date">Unlocked ${dateStr}</div>` : ''}
+                <div class="u-date" style="color:var(--teal);font-size:.66rem;margin-top:2px;">Tap for details</div>
+            </div>`;
+        }).join('');
+
+        const lockedHtml = locked.map(b => {
+            const challenges = Array.isArray(b.challenges) ? b.challenges : [];
+            const progressHtml = challenges.map(c => {
+                const pct = c.targetValue > 0
+                    ? Math.min(100, Math.round((c.currentValue / c.targetValue) * 100))
+                    : 0;
+                return `
+                <div class="locked-chal-row" style="font-size:.68rem;color:var(--muted);margin-top:4px;">
+                    <div>${c.emoji || '⭐'} ${escHtml(c.description || '')} — ${Math.round(c.currentValue)} / ${c.targetValue}</div>
+                    <div style="height:5px;background:#eee;border-radius:3px;margin-top:2px;overflow:hidden;">
+                        <div style="height:100%;width:${pct}%;background:var(--teal,#4DB6AC);"></div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            // Show which pillar pct this badge represents (AI spec: acad_pct, soc_pct, etc.)
+            // Badges 1-27 (legacy) store these 0-100. Badges 28-40 (Phase 12
+            // AI team library) store them 0.0-1.0 per the AI team's exact
+            // spec scale (acad_pct DECIMAL(3,2), etc.) — normalize both to a
+            // 0-100 display percentage so the UI never shows "Academic 0.1%"
+            // for the new badges.
+            const toPct = (v) => {
+                if (!v || v <= 0) return 0;
+                return v <= 1 ? Math.round(v * 100) : Math.round(v);
+            };
+            const pillarPcts = [
+                toPct(b.acadPct) > 0 ? `Academic ${toPct(b.acadPct)}%` : null,
+                toPct(b.socPct)  > 0 ? `Social ${toPct(b.socPct)}%`   : null,
+                toPct(b.mentPct) > 0 ? `Mental ${toPct(b.mentPct)}%`   : null,
+                toPct(b.physPct) > 0 ? `Nutrition ${toPct(b.physPct)}%` : null,
+                toPct(b.spirPct) > 0 ? `Spiritual ${toPct(b.spirPct)}%` : null,
+                toPct(b.envPct)  > 0 ? `Home ${toPct(b.envPct)}%`      : null,
+                toPct(b.creaPct) > 0 ? `Hobbies ${toPct(b.creaPct)}%`  : null,
+                toPct(b.resPct)  > 0 ? `Sport ${toPct(b.resPct)}%`     : null,
+            ].filter(Boolean).join(' · ');
+
+            return `
+            <div class="unlocked-cell locked" title="${escHtml(b.description || '')}"
+                 style="opacity:.6;filter:grayscale(0.6);cursor:pointer;"
+                 onclick="openBadgeDetail(${b.id || b.badgeId || 0})">
+                <span class="u-icon">${renderIcon(b.iconUrl, '🔒')}</span>
+                <div class="u-name">${escHtml(b.name || 'Badge')}</div>
+                <div class="u-date">🔒 Locked</div>
+                ${pillarPcts ? `<div class="u-date" style="color:var(--teal);font-size:.62rem;margin-top:2px;">${escHtml(pillarPcts)}</div>` : ''}
+                ${progressHtml}
+                <div class="u-date" style="color:var(--teal);font-size:.66rem;margin-top:2px;">Tap for details</div>
+            </div>`;
+        }).join('');
+
+        if (!unlockedHtml && !lockedHtml) {
+            grid.innerHTML = `
+            <div class="empty-state" style="grid-column:1/-1;">
+                <div style="font-size:2rem;margin-bottom:8px;">🌱</div>
+                No badges yet! Fill in your daily journal to start unlocking badges.
+            </div>`;
+            return;
+        }
+
+        grid.innerHTML = unlockedHtml + lockedHtml;
+
+    } catch (e) {
+        console.warn('[badges] all-badges error:', e);
+        if (grid) grid.innerHTML = '<p class="empty-state">Could not load badges. Please try again later.</p>';
+    }
+}
+
+/* ─────────────────────────────────────────────
+   BADGE DETAIL MODAL
+   Uses GET /api/BadgeLevel/badges/{id}
+   Shows: badge info, challenge list with per-challenge
+   progress bars, unlocked_at timestamps, and overall %.
+   AI team spec fields: hashed_child_id, is_completed,
+   unlocked_at, challenge_text, progress_pct.
+───────────────────────────────────────────── */
+async function openBadgeDetail(badgeId) {
+    if (!badgeId) return;
+
+    // Show modal skeleton
+    let modal = document.getElementById('badgeDetailModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'badgeDetailModal';
+        modal.style.cssText = `
+            position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.5);
+            display:flex;align-items:center;justify-content:center;padding:16px;`;
+        modal.innerHTML = `
+            <div id="badgeDetailInner" style="
+                background:#fff;border-radius:24px;max-width:520px;width:100%;
+                max-height:90vh;overflow-y:auto;padding:28px 24px;
+                font-family:'Fredoka',sans-serif;position:relative;">
+                <button onclick="closeBadgeDetail()" style="
+                    position:absolute;top:14px;right:18px;background:none;border:none;
+                    font-size:1.6rem;cursor:pointer;color:#aaa;">✕</button>
+                <div id="badgeDetailContent" style="margin-top:8px;">
+                    <div style="text-align:center;padding:40px 0;color:#aaa;">Loading…</div>
+                </div>
+            </div>`;
+        document.body.appendChild(modal);
+        modal.addEventListener('click', e => { if (e.target === modal) closeBadgeDetail(); });
+    }
+    modal.style.display = 'flex';
+
+    try {
+        const res = await childAuthFetch(`/BadgeLevel/badges/${badgeId}`);
+        if (!res || !res.ok) throw new Error('badge detail fetch failed');
+        const d = await res.json();
+
+        const isUnlocked = d.is_unlocked;
+        const unlockedDate = d.unlocked_at ? formatDate(d.unlocked_at) : null;
+        const challenges = Array.isArray(d.challenges) ? d.challenges : [];
+
+        const statusColor = isUnlocked ? '#66bb6a' : '#FF8A8A';
+        const statusText  = isUnlocked
+            ? `✅ Unlocked${unlockedDate ? ' — ' + unlockedDate : ''}`
+            : `🔒 Locked — ${d.challenges_completed || 0}/${d.challenges_total || 0} challenges done`;
+
+        const challengeHtml = challenges.map(c => {
+            const done    = c.is_completed;
+            const pct     = c.progress_pct ?? (c.target_value > 0
+                ? Math.min(100, Math.round(c.current_value / c.target_value * 100)) : 0);
+            const barCol  = done ? '#66bb6a' : 'var(--teal,#4DB6AC)';
+            const unlockedStr = c.unlocked_at ? formatDate(c.unlocked_at) : null;
+            return `
+            <div style="background:${done?'#f0fdf4':'#f8f8f8'};border-radius:12px;padding:12px 14px;margin-top:10px;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:1.3rem;">${c.emoji || '⭐'}</span>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:.88rem;font-weight:700;color:#333;line-height:1.3;">
+                            ${escHtml(c.challenge_text || '')}
+                        </div>
+                        ${c.target_value > 1 ? `
+                        <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+                            <div style="flex:1;height:7px;background:#e0e0e0;border-radius:4px;overflow:hidden;">
+                                <div style="height:100%;width:${pct}%;background:${barCol};border-radius:4px;transition:width .6s;"></div>
+                            </div>
+                            <span style="font-size:.72rem;font-weight:700;color:${barCol};white-space:nowrap;">
+                                ${Math.round(c.current_value||0)} / ${c.target_value}
+                            </span>
+                        </div>` : ''}
+                        ${done && unlockedStr ? `<div style="font-size:.67rem;color:#888;margin-top:3px;">Completed ${unlockedStr}</div>` : ''}
+                    </div>
+                    <span style="font-size:1.2rem;flex-shrink:0;">${done ? '✅' : '⬜'}</span>
+                </div>
+            </div>`;
+        }).join('');
+
+        const overallPct = Math.round(d.overall_progress_pct || 0);
+
+        document.getElementById('badgeDetailContent').innerHTML = `
+            <div style="text-align:center;margin-bottom:16px;">
+                <div style="font-size:3rem;line-height:1;display:flex;align-items:center;justify-content:center;">${renderIcon(d.icon_url, '🏅')}</div>
+                <style>#badgeDetailContent svg{width:3rem;height:3rem;}</style>
+                <div style="font-size:1.4rem;font-weight:700;color:#333;margin-top:8px;">${escHtml(d.badge_name||'Badge')}</div>
+                <div style="font-size:.84rem;color:#666;margin-top:4px;">${escHtml(d.description||'')}</div>
+                <div style="font-size:.8rem;font-weight:700;color:${statusColor};margin-top:8px;">${statusText}</div>
+            </div>
+
+            ${!isUnlocked ? `
+            <div style="background:#f0f9ff;border-radius:12px;padding:12px 14px;margin-bottom:4px;">
+                <div style="font-size:.78rem;font-weight:700;color:#4a8e9a;margin-bottom:4px;">Overall Progress</div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="flex:1;height:10px;background:#ddd;border-radius:5px;overflow:hidden;">
+                        <div style="height:100%;width:${overallPct}%;background:var(--teal,#4DB6AC);border-radius:5px;transition:width .8s;"></div>
+                    </div>
+                    <span style="font-size:.82rem;font-weight:700;color:var(--teal);">${overallPct}%</span>
+                </div>
+            </div>` : ''}
+
+            <div style="font-size:.82rem;font-weight:700;color:#555;margin-top:14px;margin-bottom:2px;">
+                Challenges (${d.challenges_completed||0} / ${d.challenges_total||0})
+            </div>
+            ${challengeHtml || '<div style="color:#aaa;font-size:.82rem;padding:12px 0;">No challenges configured for this badge.</div>'}
+        `;
+    } catch (e) {
+        console.warn('[badges] badge detail error:', e);
+        document.getElementById('badgeDetailContent').innerHTML = `
+            <div style="text-align:center;padding:30px;color:#aaa;">
+                Could not load badge details. Please try again.
+            </div>`;
+    }
+}
+
+function closeBadgeDetail() {
+    const modal = document.getElementById('badgeDetailModal');
+    if (modal) modal.style.display = 'none';
+}
+
+/* ─────────────────────────────────────────────
+   5. JOURNAL SCORING — stats + today's log
+───────────────────────────────────────────── */
+async function loadJournalScoring() {
+    try {
+        const statsRes = await childAuthFetch('/Children/stats');
+        if (statsRes && statsRes.ok) {
+            const stats = await statsRes.json();
+            if (stats.currentStreak != null) setText('statStreak', stats.currentStreak);
+            if (stats.totalLogs    != null) {
+                const sub = document.getElementById('heroSub');
+                if (sub) sub.textContent += ` · ${stats.totalLogs} journal entries`;
+            }
+        }
+    } catch (e) {
+        console.warn('[badges] stats error (non-critical):', e);
+    }
+}
+
+/* ─────────────────────────────────────────────
+   Utilities
+───────────────────────────────────────────── */
+
+/**
+ * renderIcon(iconUrl)
+ * iconUrl from the API is always an inline SVG string (e.g. "<svg viewBox=...>...</svg>").
+ * Wrapping it in a sized <span> makes it render correctly at any display size.
+ * Falls back to the emoji/text passed as `fallback` when iconUrl is empty.
+ */
+function renderIcon(iconUrl, fallback = '🏅') {
+    if (!iconUrl) return fallback;
+    const s = iconUrl.trim();
+    if (s.startsWith('<svg')) {
+        // Inline SVG — inject directly so the browser renders it as a vector graphic.
+        // The parent .u-icon CSS already sets width/height via svg { width:2rem; height:2rem }.
+        return s;
+    }
+    // URL (http/https or data:) — render as <img>
+    if (s.startsWith('http') || s.startsWith('data:')) {
+        return `<img src="${escHtml(s)}" width="32" height="32" alt="" style="display:block;margin:0 auto;" loading="lazy">`;
+    }
+    // Plain text / emoji fallback
+    return s;
+}
+
+function setText(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+}
+function setWidth(id, pct) {
+    const el = document.getElementById(id);
+    if (el) el.style.width = Math.min(100, Math.max(0, pct)) + '%';
+}
+function hide(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
+}
+function escHtml(str) {
+    return String(str ?? '')
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function formatDate(iso) {
+    try {
+        return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch { return ''; }
+}
+</script>
+</body>
+</html>

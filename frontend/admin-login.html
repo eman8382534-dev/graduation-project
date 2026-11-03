@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Growia - Admin Portal</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { background: var(--peach); }
+
+    .admin-badge {
+      background: var(--teal); color: white;
+      padding: 4px 12px; border-radius: var(--radius-full);
+      font-size: 12px; text-transform: uppercase; letter-spacing: 1px;
+    }
+    .admin-header {
+      text-align: center; margin-bottom: 24px;
+      padding-bottom: 16px; border-bottom: 2px dashed #eee;
+    }
+    .form-label { color: #333; }
+    .form-input { border: 2px solid #eee; }
+    .form-input:focus { border-color: var(--teal); }
+    .btn-auth { background: var(--teal); color: white; }
+    .btn-auth:hover:not(:disabled) { filter: brightness(1.1); }
+  </style>
+</head>
+<body>
+
+<div class="page-centered">
+  <h1 class="page-title">Admin Portal</h1>
+  <p class="page-sub">Manage your digital garden</p>
+
+  <div class="auth-card">
+    <div class="admin-header">
+      <span class="admin-badge">Secure Access</span>
+    </div>
+
+    <div id="errorBanner" class="error-banner">Invalid credentials</div>
+
+    <div class="form-group">
+      <label class="form-label" for="adminUser">Admin Username</label>
+      <input type="text" class="form-input" id="adminUser" placeholder="Enter username…" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="adminPass">Password</label>
+      <input type="password" class="form-input" id="adminPass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+
+    <button class="btn-auth" id="loginBtn" onclick="doAdminLogin()">
+      Access Dashboard
+    </button>
+  </div>
+
+  <a href="index.html" class="back-link">← Return to Home</a>
+</div>
+
+<script src="script.js"></script>
+<script>
+  const API = `${API_BASE_URL}/Auth/admin-login`;
+
+  async function doAdminLogin() {
+    const user = document.getElementById('adminUser').value.trim();
+    const pass = document.getElementById('adminPass').value;
+    const btn  = document.getElementById('loginBtn');
+
+    hideBanner('errorBanner');
+
+    if (!user || !pass) {
+      showBanner('errorBanner', 'Please fill all fields');
+      return;
+    }
+
+    btn.disabled    = true;
+    btn.textContent = 'Authenticating…';
+
+    try {
+      const response = await fetch(API, {
+        method:  'POST',
+        mode:    'cors',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ username: user, password: pass })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('adminToken', data.token);
+        setAdminToken(data.token);
+        window.location.href = 'admin-dashboard.html';
+      } else {
+        let msg = 'Login failed';
+        try { const err = await response.json(); msg = err.message || msg; }
+        catch { msg = await response.text() || msg; }
+        showBanner('errorBanner', msg);
+      }
+    } catch {
+      showBanner('errorBanner', 'Connection error. Check if API is running on port 7283.');
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = 'Access Dashboard';
+    }
+  }
+
+  document.addEventListener('keypress', e => { if (e.key === 'Enter') doAdminLogin(); });
+</script>
+</body>
+</html>

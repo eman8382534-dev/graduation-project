@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Growia - Admin Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { background: var(--sky-light); }
+    .admin-layout { display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar { width: 230px; background: #1a5276; flex-shrink: 0; display: flex; flex-direction: column; }
+    .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: rgba(255,255,255,0.45); text-transform: uppercase; }
+    .sidebar-nav a { display: flex; align-items: center; gap: 10px; padding: 12px 20px; font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.7); text-decoration: none; transition: all 0.2s; }
+    .sidebar-nav a:hover, .sidebar-nav a.active { background: rgba(255,255,255,0.12); color: white; }
+
+    /* Main area */
+    .main-area   { flex: 1; display: flex; flex-direction: column; background: var(--sky-light); }
+    .top-header  { display: flex; align-items: center; justify-content: space-between; padding: 14px 28px; background: var(--mint-bg); border-bottom: 1px solid rgba(255,255,255,0.6); }
+    .content-engine-title { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 22px; color: var(--green-dark); }
+    .back-site-btn { display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: var(--coral); color: white; border: none; border-radius: var(--radius-full); font-family: var(--font-main); font-weight: 700; font-size: 14px; cursor: pointer; text-decoration: none; transition: all 0.2s; }
+    .back-site-btn:hover { background: var(--coral-dark); }
+    .page-content { flex: 1; padding: 28px; }
+
+    /* Sections */
+    .admin-section        { display: none; }
+    .admin-section.active { display: block; animation: fadeIn 0.3s ease; }
+    .section-hdr       { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .section-title-big { font-family: var(--font-display); font-size: 26px; color: var(--text-dark); display: flex; align-items: center; gap: 10px; }
+    .section-desc      { font-size: 14px; color: var(--text-light); margin-bottom: 24px; }
+    .add-btn-big       { display: flex; align-items: center; gap: 8px; padding: 11px 20px; background: #27ae60; color: white; border: none; border-radius: var(--radius-full); font-family: var(--font-main); font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+    .add-btn-big:hover { background: #219150; }
+
+    /* Analytics cards */
+    .analytics-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; margin-bottom: 28px; }
+    .stat-card { background: white; border-radius: var(--radius-xl); padding: 24px; text-align: center; box-shadow: var(--shadow-sm); }
+    .stat-card.yellow-bg { background: #fffbe6; }
+    .stat-card.purple-bg { background: #f5f0ff; }
+    .stat-icon  { font-size: 36px; margin-bottom: 8px; }
+    .stat-num   { font-family: var(--font-display); font-size: 36px; color: var(--teal); }
+    .stat-label { font-size: 13px; color: var(--text-light); font-weight: 600; margin-top: 4px; }
+
+    /* Filter row */
+    .filter-row { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-bottom: 16px; }
+    .filter-select { padding: 9px 32px 9px 14px; border: 1.5px solid #e0e0e0; border-radius: var(--radius-full); font-family: var(--font-main); font-size: 14px; font-weight: 600; background: white; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; outline: none; }
+
+    /* Status badges */
+    .role-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 700; }
+    .role-badge.admin  { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+    .role-badge.child  { background: #e1f5fe; color: #0288d1; }
+    .role-badge.parent { background: #f3e5f5; color: #7b1fa2; }
+
+    .status-badge-capsule { padding: 4px 12px; border-radius: 50px; font-size: 12px; font-weight: 800; letter-spacing: 0.5px; display: inline-block; min-width: 80px; text-align: center; text-transform: uppercase; }
+    .status-bg-active   { color: #1b5e20; background: #c8e6c9; border: 1px solid #a5d6a7; animation: pulse-green 2s infinite; }
+    .status-bg-inactive { color: #546e7a; background: #eceff1; border: 1px solid #cfd8dc; }
+
+    @keyframes pulse-green {
+      0%,100% { background: #c8e6c9; box-shadow: 0 0 0 0 rgba(200,230,201,0.7); }
+      50%      { background: #81c784; box-shadow: 0 0 0 8px rgba(200,230,201,0); }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar       { display: none; }
+      .analytics-cards { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="admin-layout">
+
+  <div class="sidebar">
+    <div class="sidebar-header">Content Engine</div>
+    <nav class="sidebar-nav">
+      <a href="#" class="active" onclick="showSection('analytics',this)">App Analytics</a>
+      <a href="#"               onclick="showSection('logform',this)">Log Form Management</a>
+      <a href="#"               onclick="showSection('leafytips',this)">Leafy Tips Management</a>
+      <a href="#"               onclick="showSection('badges',this)">Badges Management</a>
+      <a href="#"               onclick="showSection('clusters',this)">Personality Clusters</a>
+      <a href="#"               onclick="showSection('characters',this)">Character Management</a>
+      <a href="#"               onclick="showSection('users',this)">User Management</a>
+    </nav>
+  </div>
+
+  <div class="main-area">
+    <div class="top-header">
+      <div class="content-engine-title">Content Engine</div>
+      <a href="index.html" class="back-site-btn">← Back to Site</a>
+    </div>
+
+    <div class="page-content">
+
+      <div class="admin-section active" id="sec-analytics">
+        <div class="section-hdr"><div class="section-title-big">App Analytics</div></div>
+        <div class="section-desc">Overview of app usage and engagement metrics.</div>
+        <div class="analytics-cards">
+          <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-num" id="totalUsers">—</div>
+            <div class="stat-label">Total Users</div>
+          </div>
+          <div class="stat-card yellow-bg">
+            <div class="stat-icon">📋</div>
+            <div class="stat-num" id="totalJournals">—</div>
+            <div class="stat-label">Daily Journal Completions</div>
+          </div>
+          <div class="stat-card purple-bg">
+            <div class="stat-icon">🛡️</div>
+            <div class="stat-num" id="avgTrustScore">—</div>
+            <div class="stat-label">Avg Trust Score</div>
+          </div>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Date</th><th>Journals Completed</th><th>New Users</th><th>Avg Trust Score</th></tr></thead>
+          <tbody id="analyticsTableBody"><tr><td colspan="4" style="text-align:center;color:#aaa;">Loading…</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="admin-section" id="sec-logform">
+        <div class="section-hdr">
+          <div class="section-title-big">Log Form Management</div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <select class="filter-select" id="catFilter" onchange="filterLog()">
+              <option value="">All Categories</option>
+              <option value="Religion">Religion</option>
+              <option value="Social">Social</option>
+              <option value="Homework">Homework</option>
+              <option value="Helping">Helping</option>
+              <option value="Food">Food</option>
+              <option value="Moving">Moving</option>
+              <option value="Feelings">Feelings</option>
+            </select>
+            <button class="add-btn-big" onclick="openModal('addItemModal')">+ Add Item</button>
+          </div>
+        </div>
+        <div class="section-desc">Manage global constants & add-ons for the daily journal.</div>
+        <table class="data-table" id="logTable">
+          <thead><tr><th>Category</th><th>Value</th><th>Type</th><th>Actions</th></tr></thead>
+          <tbody id="logTableBody"><tr><td colspan="4" style="text-align:center;color:#aaa;">Loading…</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="admin-section" id="sec-leafytips">
+        <div class="section-hdr">
+          <div class="section-title-big">Leafy Tips Management</div>
+          <button class="add-btn-big" onclick="openModal('addTipModal')">+ Add Tip</button>
+        </div>
+        <div class="section-desc">Manage tips categorized by personality side & type.</div>
+        <table class="data-table">
+          <thead><tr><th>Side</th><th>Type</th><th>Purpose</th><th>Content</th><th>Actions</th></tr></thead>
+          <tbody id="tipsTableBody"><tr><td colspan="5" style="text-align:center;color:#aaa;">Loading…</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="admin-section" id="sec-badges">
+        <div class="section-hdr">
+          <div class="section-title-big">Badges Management</div>
+          <button class="add-btn-big" onclick="openModal('addBadgeModal')">+ Add Badge</button>
+        </div>
+        <div class="section-desc">Manage supportive & rescue badges with activity suggestions.</div>
+        <table class="data-table">
+          <thead><tr><th>Badge Name</th><th>Personality Side</th><th>Category</th><th>Activity Suggestion</th><th>Actions</th></tr></thead>
+          <tbody id="badgesTableBody"><tr><td colspan="5" style="text-align:center;color:#aaa;">Loading…</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="admin-section" id="sec-clusters">
+        <div class="section-hdr">
+          <div class="section-title-big">🧭 Personality Clusters</div>
+        </div>
+        <div class="section-desc">
+          AI-generated personality clusters (Phase 12). Cluster definitions and child assignments are written
+          exclusively by the external AI team — admins may relabel a cluster's display name/description for
+          parent-facing clarity, but cannot edit the underlying AI characteristics or reassign children.
+        </div>
+        <div class="analytics-cards" id="clustersGrid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));">
+          <div class="stat-card"><div class="stat-label">Loading clusters…</div></div>
+        </div>
+
+        <div id="clusterMembersWrap" style="display:none;margin-top:24px;">
+          <div class="section-hdr">
+            <div class="section-title-big" style="font-size:18px;" id="clusterMembersTitle">Cluster Members</div>
+            <button class="add-btn-big" style="background:#90a4ae;" onclick="closeClusterMembers()">← Back to Clusters</button>
+          </div>
+          <table class="data-table">
+            <thead><tr><th>Child</th><th>Age</th><th>Similarity</th><th>Assigned At</th></tr></thead>
+            <tbody id="clusterMembersTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="admin-section" id="sec-characters">
+        <div class="section-hdr">
+          <div class="section-title-big">Character Management</div>
+          <button class="add-btn-big" onclick="openModal('addCharModal')">+ Add Character</button>
+        </div>
+        <div class="section-desc">Manage Leafy avatars and companion characters.</div>
+        <table class="data-table">
+          <thead><tr><th>Avatar</th><th>Name</th><th>Description</th><th>Personality</th><th>Actions</th></tr></thead>
+          <tbody id="charactersTableBody"><tr><td colspan="5" style="text-align:center;color:#aaa;">Loading…</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="admin-section" id="sec-users">
+        <div class="section-hdr"><div class="section-title-big">User Management</div></div>
+        <div class="section-desc">View and manage all parent and child accounts.</div>
+        <table class="data-table">
+          <thead><tr><th>Name</th><th>Role</th><th>Email</th><th>Status</th><th>Trust Score</th><th>Actions</th></tr></thead>
+          <tbody id="usersTableBody"><tr><td colspan="6" style="text-align:center;color:#aaa;">Loading…</td></tr></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="addItemModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('addItemModal')">✕</button>
+    <div class="modal-title">Add Item</div>
+    <p class="modal-subtitle">Add a new constant or add-on to the journal.</p>
+    <div class="form-group">
+      <label class="form-label" for="itemCategory">Category</label>
+      <select class="form-input" id="itemCategory">
+        <option value="Religion">Religion</option>
+        <option value="Social">Social</option>
+        <option value="Homework">Homework</option>
+        <option value="Helping">Helping</option>
+        <option value="Food">Food</option>
+        <option value="Moving">Moving</option>
+        <option value="Feelings">Feelings</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="itemValue">Value</label>
+      <input type="text" class="form-input" id="itemValue" placeholder="e.g. Fajr Prayer">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="itemType">Type</label>
+      <select class="form-input" id="itemType">
+        <option value="Constant">Constant</option>
+        <option value="Addon">Addon</option>
+      </select>
+    </div>
+    <button class="add-btn-big" style="width:100%;" onclick="addLogItem()">Add Item</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="addTipModal">
+  <div class="modal" style="max-height:90vh;overflow-y:auto;">
+    <button class="modal-close" onclick="closeModal('addTipModal')">✕</button>
+    <div class="modal-title">Add / Edit Leafy Tip</div>
+    <p class="modal-subtitle">Create a new Leafy tip for a personality pillar.</p>
+    <div class="form-group">
+      <label class="form-label" for="tipSide">Pillar Side</label>
+      <select class="form-input" id="tipSide">
+        <option value="spiritual">Spiritual (Connection with Allah)</option>
+        <option value="social">Social (Interaction &amp; Kindness)</option>
+        <option value="academic">Academic (Homework &amp; Study)</option>
+        <option value="environment">Environment (Family Chores)</option>
+        <option value="physical">Physical (Nutrition &amp; Food)</option>
+        <option value="sport">Sport (Movement &amp; Activity)</option>
+        <option value="creativity">Creativity (Hobbies)</option>
+        <option value="mental">Mental (Mood &amp; Wellbeing)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="tipType">Type</label>
+      <select class="form-input" id="tipType">
+        <option value="encouragement">Encouragement</option>
+        <option value="warning">Warning</option>
+        <option value="achievement">Achievement</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="tipPurpose">Purpose (Who sees this?)</label>
+      <select class="form-input" id="tipPurpose" onchange="updateTipFields()">
+        <option value="tip">Tip — child practical advice</option>
+        <option value="alert">Alert — parent urgent notification</option>
+        <option value="motivation">Motivation — child praise</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="tipContent">Content (legacy/fallback text)</label>
+      <textarea class="form-input" id="tipContent" rows="2" placeholder="Fallback content for older clients…"></textarea>
+    </div>
+    <div class="form-group" id="tipField" style="display:block;">
+      <label class="form-label" for="tipTip">💡 Child Tip Text</label>
+      <textarea class="form-input" id="tipTip" rows="3" placeholder="Child-facing practical advice…"></textarea>
+    </div>
+    <div class="form-group" id="alertField" style="display:none;">
+      <label class="form-label" for="tipAlert">⚠️ Parent Alert Text</label>
+      <textarea class="form-input" id="tipAlert" rows="3" placeholder="Parent-facing urgent notification…"></textarea>
+    </div>
+    <div class="form-group" id="motivationField" style="display:none;">
+      <label class="form-label" for="tipMotivation">🌟 Child Motivation Text</label>
+      <textarea class="form-input" id="tipMotivation" rows="3" placeholder="Child-facing motivational praise…"></textarea>
+    </div>
+    <button class="add-btn-big" style="width:100%;" onclick="addTip()">Add Tip</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="addBadgeModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('addBadgeModal')">✕</button>
+    <div class="modal-title">Add Badge</div>
+    <p class="modal-subtitle">Create a new badge for heroes to earn.</p>
+    <div class="form-group">
+      <label class="form-label" for="badgeName">Badge Name</label>
+      <input type="text" class="form-input" id="badgeName" placeholder="e.g. Heart Keeper">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="badgeSide">Personality Side</label>
+      <select class="form-input" id="badgeSide">
+        <option value="Spiritual">Spiritual</option>
+        <option value="Kindness">Kindness</option>
+        <option value="Curiosity">Curiosity</option>
+        <option value="Vitality">Vitality</option>
+        <option value="Resilience">Resilience</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="badgeCategory">Category</label>
+      <select class="form-input" id="badgeCategory">
+        <option value="Supportive">Supportive — First Journal</option>
+        <option value="Consistency3">Consistency3 — 3-Day Streak</option>
+        <option value="Consistency7">Consistency7 — 7-Day Streak</option>
+        <option value="Consistency30">Consistency30 — 30-Day Streak</option>
+        <option value="TaskMaster5">TaskMaster5 — 5 Tasks</option>
+        <option value="TaskMaster20">TaskMaster20 — 20 Tasks</option>
+        <option value="TaskMaster50">TaskMaster50 — 50 Tasks</option>
+        <option value="BalancedHero">BalancedHero — All Pillars ≥ 40%</option>
+        <option value="BalancedMaster">BalancedMaster — All Pillars ≥ 70%</option>
+        <option value="SpiritualBronze">SpiritualBronze</option>
+        <option value="SpiritualSilver">SpiritualSilver</option>
+        <option value="SpiritualGold">SpiritualGold</option>
+        <option value="SocialBronze">SocialBronze</option>
+        <option value="SocialSilver">SocialSilver</option>
+        <option value="SocialGold">SocialGold</option>
+        <option value="AcademicBronze">AcademicBronze</option>
+        <option value="AcademicSilver">AcademicSilver</option>
+        <option value="AcademicGold">AcademicGold</option>
+        <option value="HomeResBronze">HomeResBronze</option>
+        <option value="HomeResSilver">HomeResSilver</option>
+        <option value="HomeResGold">HomeResGold</option>
+        <option value="NutritionBronze">NutritionBronze</option>
+        <option value="NutritionSilver">NutritionSilver</option>
+        <option value="NutritionGold">NutritionGold</option>
+        <option value="SportBronze">SportBronze</option>
+        <option value="SportSilver">SportSilver</option>
+        <option value="SportGold">SportGold</option>
+        <option value="HobbiesBronze">HobbiesBronze</option>
+        <option value="HobbiesSilver">HobbiesSilver</option>
+        <option value="HobbiesGold">HobbiesGold</option>
+        <option value="MentalBronze">MentalBronze</option>
+        <option value="MentalSilver">MentalSilver</option>
+        <option value="MentalGold">MentalGold</option>
+        <option value="SportActive">SportActive</option>
+        <option value="SportChampion">SportChampion</option>
+        <option value="ScholarPro">ScholarPro</option>
+        <option value="HomeHelper">HomeHelper</option>
+        <option value="CreativeExplorer">CreativeExplorer</option>
+        <option value="CreativeStar">CreativeStar</option>
+        <option value="HomeStar">HomeStar</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="badgeSuggestion">Activity Suggestion</label>
+      <textarea class="form-input" id="badgeSuggestion" rows="2" placeholder="Describe what the child should do…"></textarea>
+    </div>
+    <button class="add-btn-big" style="width:100%;" onclick="addBadge()">Add Badge</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="editClusterModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('editClusterModal')">✕</button>
+    <div class="modal-title">Relabel Personality Cluster</div>
+    <p class="modal-subtitle">Edit the human-friendly name/description shown to parents. The AI-computed cluster data itself cannot be edited here.</p>
+    <input type="hidden" id="clusterEditId">
+    <div class="form-group">
+      <label class="form-label" for="clusterEditName">Display Name</label>
+      <input class="form-input" id="clusterEditName" placeholder="e.g. The Steady Achiever">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="clusterEditDesc">Description</label>
+      <textarea class="form-input" id="clusterEditDesc" rows="3" placeholder="Parent-facing description…"></textarea>
+    </div>
+    <button class="add-btn-big" style="width:100%;" onclick="saveClusterEdit()">Save</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="addCharModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('addCharModal')">✕</button>
+    <div class="modal-title">Add Character</div>
+    <p class="modal-subtitle">Create a new companion character.</p>
+    <div class="form-group">
+      <label class="form-label" for="charAvatar">Avatar Emoji</label>
+      <input type="text" class="form-input" id="charAvatar" placeholder="e.g. 🌿">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="charName">Name</label>
+      <input type="text" class="form-input" id="charName" placeholder="Character name">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="charDescription">Description</label>
+      <input type="text" class="form-input" id="charDescription" placeholder="Brief description">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="charPersonality">Personality</label>
+      <input type="text" class="form-input" id="charPersonality" placeholder="Personality traits">
+    </div>
+    <button class="add-btn-big" style="width:100%;" onclick="addCharacter()">Add Character</button>
+  </div>
+</div>
+
+<script src="script.js"></script>
+<script>
+  const API = `${API_BASE_URL}/Admin`;
+  const DATA = { 'log-form-items': [], tips: [], badges: [], characters: [], users: [], clusters: [] };
+
+  /* ── Authenticated fetch ─────────────────────────────── */
+  async function safeFetch(url, options = {}) {
+    const adminToken = getAdminToken() || '';
+    // FIX: include X-Device-Fingerprint so server-side logging is consistent
+    // with parent/child requests (admin-dashboard had its own fetch wrapper
+    // that was missing this header).
+    const headers = {
+      'Content-Type': 'application/json',
+      'X-Device-Fingerprint': getOrCreateDeviceId(),
+      ...(options.headers || {})
+    };
+    if (adminToken) headers['Authorization'] = `Bearer ${adminToken}`;
+    const res  = await fetch(url, { ...options, headers });
+    if (res.status === 401 || res.status === 403) {
+      clearAdminToken();
+      window.location.href = 'admin-login.html';
+      throw new Error('Session expired');
+    }
+    if (!res.ok) { const t = await res.text(); throw new Error(t || `HTTP ${res.status}`); }
+    const text = await res.text();
+    return text ? JSON.parse(text) : {};
+  }
+
+  /* ── Section navigation ──────────────────────────────── */
+  function showSection(id, el) {
+    document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+    document.getElementById('sec-' + id).classList.add('active');
+    if (el) el.classList.add('active');
+
+    const loaders = { analytics: () => { loadAnalytics(); }, logform: loadLogItems, leafytips: loadTips, badges: loadBadges, clusters: loadClusters, characters: loadCharacters, users: loadUsers };
+    loaders[id]?.();
+  }
+
+  /* ── Delete ──────────────────────────────────────────── */
+  async function deleteItem(endpoint, id, refreshFn) {
+    if (!confirm('Are you sure you want to delete this item?')) return;
+    try { await safeFetch(`${API}/${endpoint}/${id}`, { method: 'DELETE' }); await refreshFn(); }
+    catch (err) { alert('Delete failed: ' + err.message); }
+  }
+
+  async function deleteUser(id) {
+    if (!confirm('Are you sure you want to permanently delete this user?')) return;
+    try { await safeFetch(`${API}/users/${id}`, { method: 'DELETE' }); await loadUsers(); }
+    catch (err) { alert('Failed to delete: ' + err.message); }
+  }
+
+  /* ── Analytics ───────────────────────────────────────── */
+  async function loadAnalytics() {
+    try {
+      const stats = await safeFetch(`${API}/dashboard-stats`);
+      document.getElementById('totalUsers').textContent    = stats.totalUsers;
+      document.getElementById('totalJournals').textContent = stats.dailyJournals;
+      document.getElementById('avgTrustScore').textContent = stats.avgTrustScore?.toFixed(2);
+      document.getElementById('analyticsTableBody').innerHTML = (stats.dailyStats || []).map(row =>
+        `<tr><td>${row.date}</td><td>${row.journalsCompleted}</td><td>${row.newUsers}</td><td>${row.avgTrustScore}</td></tr>`
+      ).join('');
+    } catch (e) { console.error('Analytics error:', e); }
+  }
+
+  /* ── Log form items ──────────────────────────────────── */
+  async function loadLogItems() {
+    try {
+      const items = await safeFetch(`${API}/log-form-items`);
+      DATA['log-form-items'] = items;
+      document.getElementById('logTableBody').innerHTML = items.map(item => `
+        <tr data-cat="${item.category}">
+          <td>${item.category}</td><td>${item.value}</td>
+          <td><span class="tag tag-${item.type?.toLowerCase()}">${item.type}</span></td>
+          <td><button class="action-btn" onclick="editLogItem(${item.id})">✏️</button>
+              <button class="action-btn delete" onclick="deleteItem('log-form-items',${item.id},loadLogItems)">🗑️</button></td>
+        </tr>`).join('');
+    } catch (e) { console.error(e); }
+  }
+
+  async function addLogItem() {
+    const data = { category: document.getElementById('itemCategory').value, value: document.getElementById('itemValue').value.trim(), type: document.getElementById('itemType').value };
+    try { await safeFetch(`${API}/log-form-items`, { method: 'POST', body: JSON.stringify(data) }); closeModal('addItemModal'); loadLogItems(); }
+    catch (e) { alert(e.message); }
+  }
+
+  function editLogItem(id) {
+    const item = DATA['log-form-items'].find(i => i.id == id);
+    if (!item) return;
+    document.getElementById('itemCategory').value = item.category;
+    document.getElementById('itemValue').value    = item.value;
+    document.getElementById('itemType').value     = item.type;
+    const btn = document.querySelector('#addItemModal .add-btn-big');
+    btn.textContent = 'Update Item'; btn.onclick = () => updateLogItem(id);
+    openModal('addItemModal');
+  }
+
+  async function updateLogItem(id) {
+    const data = { id, category: document.getElementById('itemCategory').value, value: document.getElementById('itemValue').value.trim(), type: document.getElementById('itemType').value };
+    try { await safeFetch(`${API}/log-form-items/${id}`, { method: 'PUT', body: JSON.stringify(data) }); closeModal('addItemModal'); loadLogItems(); }
+    catch (e) { alert(e.message); }
+  }
+
+  function filterLog() {
+    const val = document.getElementById('catFilter').value.toLowerCase();
+    document.querySelectorAll('#logTableBody tr').forEach(tr => {
+      tr.style.display = (!val || (tr.dataset.cat || '').toLowerCase().includes(val)) ? '' : 'none';
+    });
+  }
+
+  /* ── Leafy Tips ──────────────────────────────────────── */
+  async function loadTips() {
+    try {
+      const tips = await safeFetch(`${API}/leafy-tips`);
+      DATA.tips  = tips;
+      document.getElementById('tipsTableBody').innerHTML = tips.map(tip => `
+        <tr>
+          <td>${tip.side}</td><td>${tip.type}</td>
+          <td><span style="background:${tip.purpose==='alert'?'#fde8e0':tip.purpose==='motivation'?'#e8f5e9':'#e8f0fe'};padding:2px 8px;border-radius:10px;font-size:12px;">${tip.purpose||'tip'}</span></td>
+          <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${tip.resolvedContent||tip.content}</td>
+          <td><button class="action-btn" onclick="editTip(${tip.id})">✏️</button>
+              <button class="action-btn delete" onclick="deleteItem('leafy-tips',${tip.id},loadTips)">🗑️</button></td>
+        </tr>`).join('');
+    } catch (e) { console.error(e); }
+  }
+
+  function updateTipFields() {
+    const purpose = document.getElementById('tipPurpose').value;
+    document.getElementById('tipField').style.display        = purpose === 'tip'        ? 'block' : 'none';
+    document.getElementById('alertField').style.display      = purpose === 'alert'      ? 'block' : 'none';
+    document.getElementById('motivationField').style.display = purpose === 'motivation' ? 'block' : 'none';
+  }
+
+  function getTipFormData() {
+    return {
+      side:       document.getElementById('tipSide').value,
+      type:       document.getElementById('tipType').value,
+      purpose:    document.getElementById('tipPurpose').value,
+      content:    document.getElementById('tipContent').value.trim() || document.getElementById('tipTip').value.trim() || document.getElementById('tipAlert').value.trim() || document.getElementById('tipMotivation').value.trim(),
+      tip:        document.getElementById('tipTip').value.trim()        || null,
+      alert:      document.getElementById('tipAlert').value.trim()      || null,
+      motivation: document.getElementById('tipMotivation').value.trim() || null
+    };
+  }
+
+  function clearTipForm() {
+    ['tipSide','tipType','tipPurpose','tipContent','tipTip','tipAlert','tipMotivation'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = el.tagName === 'SELECT' ? el.options[0].value : '';
+    });
+    updateTipFields();
+  }
+
+  async function addTip() {
+    const data = getTipFormData();
+    if (!data.content) { alert('Please enter content or tip text.'); return; }
+    try { await safeFetch(`${API}/leafy-tips`, { method: 'POST', body: JSON.stringify(data) }); closeModal('addTipModal'); clearTipForm(); loadTips(); }
+    catch (e) { alert(e.message); }
+  }
+
+  function editTip(id) {
+    const tip = DATA.tips.find(t => t.id == id);
+    if (!tip) return;
+    document.getElementById('tipSide').value        = tip.side    || '';
+    document.getElementById('tipType').value        = tip.type    || 'encouragement';
+    document.getElementById('tipPurpose').value     = tip.purpose || 'tip';
+    document.getElementById('tipContent').value     = tip.content || '';
+    document.getElementById('tipTip').value         = tip.tip     || '';
+    document.getElementById('tipAlert').value       = tip.alert   || '';
+    document.getElementById('tipMotivation').value  = tip.motivation || '';
+    updateTipFields();
+    const btn = document.querySelector('#addTipModal .add-btn-big');
+    btn.textContent = 'Update Tip'; btn.onclick = () => updateTip(id);
+    openModal('addTipModal');
+  }
+
+  async function updateTip(id) {
+    const data = getTipFormData();
+    if (!data.content) { alert('Please enter content.'); return; }
+    try { await safeFetch(`${API}/leafy-tips/${id}`, { method: 'PUT', body: JSON.stringify(data) }); closeModal('addTipModal'); clearTipForm(); loadTips(); }
+    catch (e) { alert(e.message); }
+  }
+
+  /* ── Badges ──────────────────────────────────────────── */
+  async function loadBadges() {
+    try {
+      const badges = await safeFetch(`${API}/badges`);
+      DATA.badges  = badges;
+      document.getElementById('badgesTableBody').innerHTML = badges.map(b => `
+        <tr><td><strong>${b.name}</strong></td><td>${b.personalitySide}</td><td>${b.category}</td><td>${b.description}</td>
+        <td><button class="action-btn" onclick="editBadge(${b.id})">✏️</button>
+            <button class="action-btn delete" onclick="deleteItem('badges',${b.id},loadBadges)">🗑️</button></td></tr>`).join('');
+    } catch (e) { console.error(e); }
+  }
+
+  async function addBadge() {
+    const data = { Name: document.getElementById('badgeName').value.trim(), PersonalitySide: document.getElementById('badgeSide').value, Category: document.getElementById('badgeCategory').value, Description: document.getElementById('badgeSuggestion').value.trim(), IconUrl: '', IsUnlocked: false };
+    try { await safeFetch(`${API}/badges`, { method: 'POST', body: JSON.stringify(data) }); closeModal('addBadgeModal'); loadBadges(); }
+    catch (e) { alert(e.message); }
+  }
+
+  function editBadge(id) {
+    const b = DATA.badges.find(x => x.id == id);
+    if (!b) return;
+    document.getElementById('badgeName').value       = b.name;
+    document.getElementById('badgeSide').value       = b.personalitySide;
+    document.getElementById('badgeCategory').value   = b.category;
+    document.getElementById('badgeSuggestion').value = b.description;
+    const btn = document.querySelector('#addBadgeModal .add-btn-big');
+    btn.textContent = 'Update Badge'; btn.onclick = () => updateBadge(id);
+    openModal('addBadgeModal');
+  }
+
+  async function updateBadge(id) {
+    const data = { id, name: document.getElementById('badgeName').value.trim(), personalitySide: document.getElementById('badgeSide').value, category: document.getElementById('badgeCategory').value, description: document.getElementById('badgeSuggestion').value.trim(), iconUrl: '' };
+    try { await safeFetch(`${API}/badges/${id}`, { method: 'PUT', body: JSON.stringify(data) }); closeModal('addBadgeModal'); loadBadges(); }
+    catch (e) { alert(e.message); }
+  }
+
+  /* ── Personality Clusters (Phase 12 — AI output, read-mostly) ──── */
+  async function loadClusters() {
+    const grid = document.getElementById('clustersGrid');
+    try {
+      const clusters = await safeFetch(`${API}/personality-clusters`);
+      DATA.clusters = clusters;
+      if (!clusters.length) {
+        grid.innerHTML = `<div class="stat-card"><div class="stat-label">No clusters yet — the AI team's periodic clustering job hasn't run.</div></div>`;
+        return;
+      }
+      grid.innerHTML = clusters.map(c => `
+        <div class="stat-card" style="text-align:left;">
+          <div class="stat-label" style="font-weight:700;color:#37474f;">${c.name}</div>
+          <div style="font-size:13px;color:#607d8b;margin:6px 0;min-height:36px;">${c.description || 'No AI description yet.'}</div>
+          <div style="font-size:12px;color:#90a4ae;margin-bottom:8px;">👥 ${c.memberCount} member(s)${c.dominantTraits ? ' · ' + c.dominantTraits : ''}</div>
+          <button class="action-btn" onclick="viewClusterMembers(${c.id}, '${c.name.replace(/'/g, "\\'")}')">👁️ View Members</button>
+          <button class="action-btn" onclick="editCluster(${c.id})">✏️ Relabel</button>
+        </div>`).join('');
+    } catch (e) {
+      console.error(e);
+      grid.innerHTML = `<div class="stat-card"><div class="stat-label">Failed to load clusters.</div></div>`;
+    }
+  }
+
+  async function viewClusterMembers(id, name) {
+    document.getElementById('clusterMembersTitle').textContent = `Members of "${name}"`;
+    document.getElementById('clusterMembersWrap').style.display = 'block';
+    const tbody = document.getElementById('clusterMembersTableBody');
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#aaa;">Loading…</td></tr>`;
+    try {
+      const members = await safeFetch(`${API}/personality-clusters/${id}/children`);
+      tbody.innerHTML = members.length
+        ? members.map(m => `<tr><td>${m.fullName}</td><td>${m.age}</td><td>${m.similarityScore.toFixed(1)}%</td><td>${new Date(m.assignedAt).toLocaleDateString()}</td></tr>`).join('')
+        : `<tr><td colspan="4" style="text-align:center;color:#aaa;">No children currently in this cluster.</td></tr>`;
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#e57373;">Failed to load members.</td></tr>`;
+    }
+  }
+
+  function closeClusterMembers() {
+    document.getElementById('clusterMembersWrap').style.display = 'none';
+  }
+
+  function editCluster(id) {
+    const c = DATA.clusters.find(x => x.id == id);
+    if (!c) return;
+    document.getElementById('clusterEditId').value   = id;
+    document.getElementById('clusterEditName').value = c.name;
+    document.getElementById('clusterEditDesc').value = c.description || '';
+    openModal('editClusterModal');
+  }
+
+  async function saveClusterEdit() {
+    const id = document.getElementById('clusterEditId').value;
+    const data = { Name: document.getElementById('clusterEditName').value.trim(), Description: document.getElementById('clusterEditDesc').value.trim() };
+    try {
+      await safeFetch(`${API}/personality-clusters/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+      closeModal('editClusterModal');
+      loadClusters();
+    } catch (e) { alert(e.message); }
+  }
+
+  /* ── Characters ──────────────────────────────────────── */
+  async function loadCharacters() {
+    try {
+      const chars = await safeFetch(`${API}/characters`);
+      DATA.characters = chars;
+      document.getElementById('charactersTableBody').innerHTML = chars.map(c => `
+        <tr><td style="font-size:22px;">${c.avatar}</td><td>${c.name}</td><td>${c.description}</td><td>${c.personality}</td>
+        <td><button class="action-btn" onclick="editCharacter(${c.id})">✏️</button>
+            <button class="action-btn delete" onclick="deleteItem('characters',${c.id},loadCharacters)">🗑️</button></td></tr>`).join('');
+    } catch (e) { console.error(e); }
+  }
+
+  async function addCharacter() {
+    const desc = document.getElementById('charDescription').value.trim();
+    const pers = document.getElementById('charPersonality').value.trim();
+    // FIX P3: Client-side validation مطابقة لـ CharacterDto StringLength في Backend
+    if (desc.length > 200) { alert('Description must be 200 characters or less.'); return; }
+    if (pers.length > 100) { alert('Personality must be 100 characters or less.'); return; }
+    const data = { Avatar: document.getElementById('charAvatar').value, Name: document.getElementById('charName').value, Description: desc, Personality: pers };
+    try { await safeFetch(`${API}/characters`, { method: 'POST', body: JSON.stringify(data) }); closeModal('addCharModal'); loadCharacters(); }
+    catch (e) { alert(e.message); }
+  }
+
+  function editCharacter(id) {
+    const c = DATA.characters.find(x => x.id == id);
+    if (!c) return;
+    document.getElementById('charAvatar').value      = c.avatar;
+    document.getElementById('charName').value        = c.name;
+    document.getElementById('charDescription').value = c.description;
+    document.getElementById('charPersonality').value = c.personality;
+    const btn = document.querySelector('#addCharModal .add-btn-big');
+    btn.textContent = 'Update Character'; btn.onclick = () => updateCharacter(id);
+    openModal('addCharModal');
+  }
+
+  async function updateCharacter(id) {
+    const desc = document.getElementById('charDescription').value.trim();
+    const pers = document.getElementById('charPersonality').value.trim();
+    // FIX P3: Client-side validation مطابقة لـ CharacterDto StringLength في Backend
+    if (desc.length > 200) { alert('Description must be 200 characters or less.'); return; }
+    if (pers.length > 100) { alert('Personality must be 100 characters or less.'); return; }
+    const data = { id, avatar: document.getElementById('charAvatar').value, name: document.getElementById('charName').value, description: desc, personality: pers };
+    try { await safeFetch(`${API}/characters/${id}`, { method: 'PUT', body: JSON.stringify(data) }); closeModal('addCharModal'); loadCharacters(); }
+    catch (e) { alert(e.message); }
+  }
+
+  /* ── Users ───────────────────────────────────────────── */
+  async function loadUsers() {
+    try {
+      const users = await safeFetch(`${API}/users/search`);
+      DATA.users  = users;
+      document.getElementById('usersTableBody').innerHTML = users.map(u => {
+        const name      = u.fullName || 'No Name';
+        const roleText  = u.profileType || 'Parent';
+        const roleClass = roleText.toLowerCase();
+        const lastActive = new Date(u.lastActiveAt).getTime();
+        const nowUtc    = Date.now(); // Date.now() is already UTC milliseconds
+        const isActive  = Math.abs(nowUtc - lastActive) / 60000 < 5;
+        const displayEmail = (u.email?.includes('@leafy.internal')) ? '—' : (u.email || '—');
+        return `
+          <tr>
+            <td><strong>${name}</strong></td>
+            <td><span class="role-badge ${roleClass}">${roleText}</span></td>
+            <td>${displayEmail}</td>
+            <td><span class="status-badge-capsule ${isActive ? 'status-bg-active' : 'status-bg-inactive'}">${isActive ? 'Active' : 'Inactive'}</span></td>
+            <td>${roleText === 'Child' ? `<strong style="color:#27ae60;">${u.trustScore}%</strong>` : '—'}</td>
+            <td><button class="action-btn delete" onclick="deleteUser('${u.id}')">🗑️</button></td>
+          </tr>`;
+      }).join('');
+    } catch (e) { console.error('Users error:', e); }
+  }
+
+  /* ── Modal helpers ───────────────────────────────────── */
+  function openModal(id) { document.getElementById(id).classList.add('active'); }
+  function closeModal(id) {
+    const modal = document.getElementById(id);
+    modal.classList.remove('active');
+    modal.querySelectorAll('input, textarea').forEach(i => i.value = '');
+    const btn = modal.querySelector('.add-btn-big');
+    if (btn) {
+      const defaults = { addItemModal: ['Add Item', addLogItem], addTipModal: ['Add Tip', addTip], addBadgeModal: ['Add Badge', addBadge], addCharModal: ['Add Character', addCharacter] }; if (id === 'addTipModal') clearTipForm();
+      if (defaults[id]) { btn.textContent = defaults[id][0]; btn.onclick = defaults[id][1]; }
+    }
+  }
+
+  /* ── Init ────────────────────────────────────────────── */
+  window.onload = async () => {
+    if (!requireAdminAuth()) return;
+    try {
+      await loadAnalytics();
+      await Promise.all([loadLogItems(), loadTips(), loadBadges(), loadClusters(), loadCharacters(), loadUsers()]);
+    } catch (e) {
+      if (e.message && e.message.includes('401')) {
+        clearAdminToken();
+        window.location.href = 'admin-login.html';
+      } else {
+        console.error('Init failed:', e);
+      }
+    }
+  };
+</script>
+</body>
+</html>

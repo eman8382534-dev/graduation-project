@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Growia - Daily Journal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="leafy.css">
+    <style>
+        :root {
+            --clr-academic:   #F9FBE7; --clr-academic-b:   #F0F4C3; --clr-academic-t:   #827717;
+            --clr-religious:  #E8EAF6; --clr-religious-b:  #C5CAE9; --clr-religious-t:  #3F51B5;
+            --clr-physical:   #E0F2F1; --clr-physical-b:   #B2DFDB; --clr-physical-t:   #00796B;
+            --clr-social:     #FCE4EC; --clr-social-b:     #F8BBD0; --clr-social-t:     #AD1457;
+            --clr-emotional:  #FFFDE7; --clr-emotional-b:  #FFF9C4; --clr-emotional-t:  #FBC02D;
+            --clr-resilience: #EDE7F6; --clr-resilience-b: #D1C4E9; --clr-resilience-t: #4527A0;
+        }
+
+        body {
+            background: linear-gradient(to bottom, #D0F4FF, #E0F7F9);
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Fredoka', sans-serif;
+            box-sizing: border-box;
+        }
+
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            padding: 20px 4%;
+            max-width: 1400px;
+            margin: 0 auto 120px auto;
+        }
+
+        @media (max-width: 992px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .column-left, .column-right {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .journal-section {
+            background: #fff;
+            padding: 20px 24px;
+            border-radius: 30px;
+            border-bottom: 5px solid transparent;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hobby-item {
+            background: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-family: inherit;
+            font-weight: 600;
+            color: #555;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .hobby-item.selected-hobby {
+            background: #FFD97D !important;
+            color: #3E2A1F;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .badge-circle {
+            width: 35px; height: 35px;
+            background: #fff;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .badge-circle.badge-active { background:#4FC3F7; color:white; border-color:#4FC3F7; }
+
+        .mood-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        @media (max-width: 576px) {
+            .mood-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .mood-card {
+            background: #fff;
+            border-radius: 24px;
+            padding: 20px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 2px solid transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .mood-card:hover { transform: translateY(-2px); }
+        .mood-card.selected-mood {
+            background: #FFD97D !important;
+            border-color: #FF8A8A;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .mood-emoji { font-size: 2.2rem; display: block; margin-bottom: 8px; }
+        .mood-text { font-size: 11px; font-weight: 600; color: #555; line-height: 1.3; }
+
+        #saveBanner {
+            display: none;
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: #4ade80; color: #14532d;
+            font-weight: 700; font-size: 15px;
+            padding: 12px 28px; border-radius: 30px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+            z-index: 200; transition: opacity 0.4s;
+        }
+        #saveBanner.error { background:#fca5a5; color:#7f1d1d; }
+
+        #levelUpOverlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 300;
+            align-items: center; justify-content: center;
+        }
+        #levelUpOverlay.show { display: flex; }
+        #levelUpCard {
+            background: #fff;
+            border-radius: 30px;
+            padding: 40px 50px;
+            text-align: center;
+            max-width: 360px;
+            animation: popIn 0.4s ease;
+        }
+        @keyframes popIn {
+            from { transform: scale(0.7); opacity: 0; }
+            to   { transform: scale(1);   opacity: 1; }
+        }
+        #levelUpCard h2 { font-size: 2rem; color: #FF8A8A; margin: 0 0 10px 0; }
+        #levelUpCard p  { color: #555; margin: 4px 0; }
+
+        #saveBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        #socialQualityBox {
+            background: rgba(255,255,255,0.5);
+            border-radius: 12px;
+            padding: 10px 12px;
+        }
+
+        #multiSaveBanner {
+            display: none;
+            position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%);
+            z-index: 101;
+            background: #d4edda; color: #155724;
+            padding: 10px 24px; border-radius: 20px;
+            font-weight: 600; font-size: 13px;
+            text-align: center; max-width: 90%;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        }
+
+        .badge-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #fff;
+            border-radius: 18px;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 6px 24px rgba(0,0,0,.18);
+            z-index: 9999;
+            transform: translateX(120%);
+            transition: transform .35s ease;
+            max-width: 280px;
+        }
+        .badge-toast.show { transform: translateX(0); }
+        .badge-toast .toast-icon {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: #FFD97D; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem;
+            box-shadow: 0 3px 0 #c49a00;
+        }
+        .badge-toast .toast-text { font-size: .82rem; line-height: 1.3; }
+        .badge-toast .toast-title { font-weight: 700; color: #e6536f; margin-bottom: 2px; }
+        .badge-toast .toast-name  { font-weight: 700; color: #333; }
+    </style>
+</head>
+
+<body>
+
+    <script src="script.js"></script>
+    <div id="saveBanner"></div>
+
+    <div id="levelUpOverlay">
+        <div id="levelUpCard">
+            <div style="font-size:3rem;">🎉</div>
+            <h2>LEVEL UP!</h2>
+            <p id="levelUpText">You reached a new level!</p>
+            <p id="levelUpSub" style="font-size:13px; color:#aaa;"></p>
+            <button class="btn" onclick="closeLevelUp()"
+                    style="margin-top:20px; background:#FFD97D; border:none; padding:12px 30px;
+                           border-radius:20px; font-weight:700; cursor:pointer; font-size:1rem;">
+                Keep Going! 🚀
+            </button>
+        </div>
+    </div>
+
+    <!-- رأس الصفحة -->
+    <section style="padding: 20px 4% 0 4%;">
+        <div style="text-align:left; margin-bottom:10px;">
+            <a href="leafy.html" class="btn"
+               style="background:rgba(255,255,255,0.7); text-decoration:none; color:#333;
+                      border-radius:50%; width:40px; height:40px; padding:0;
+                      display:flex; align-items:center; justify-content:center; font-weight:bold;">&lt;</a>
+        </div>
+        <div style="text-align:center; margin-bottom:10px;">
+            <h1 style="color:#FF8A8A; font-size:2.2rem; text-shadow:2px 2px white; margin:0 0 5px 0;">
+                What do you want to tell Leafy about today?? 🌿✨
+            </h1>
+            <p style="color:#666; font-style:italic; margin:0;">Leafy keeps secrets, you can trust him. 🤫</p>
+        </div>
+    </section>
+
+    <!-- الـ Dashboard -->
+    <div class="dashboard-container">
+        
+        <div class="column-left">
+            
+            <!-- الجانب الديني -->
+            <div data-section="spiritual" class="journal-section"
+                 style="background:var(--clr-religious); border-color:var(--clr-religious-b);">
+                <h4 class="section-title" style="color:var(--clr-religious-t);">🕋 Today I connected with Allah by...</h4>
+                <!--
+                    BUG FIX (Phase 14 Audit): the single generic "Praying" button
+                    below used to be the only prayer option. NewProgressionService's
+                    prayer_day metric (which gates the "Blossom Buddy" badge / feeds
+                    Level 2's auto-awarded badge challenges) checks SpiritualActivities
+                    for the 5 literal prayer names (Fajr, Dhuhr, Asr, Maghrib, Isha) all
+                    present on the same day — a single "Praying" entry could never
+                    contain all 5 names, so that challenge was permanently unsatisfiable
+                    through the journal UI. Replaced "Praying" with 5 separate prayer
+                    buttons so a child who actually prayed all 5 can have that reflected
+                    in SpiritualActivities exactly as the backend expects.
+                -->
+                <p style="font-size:0.8rem; font-weight:700; color:var(--clr-religious-t); margin:0 0 6px 0; opacity:0.8;">
+                    🕌 Prayers
+                </p>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
+                    <button class="hobby-item" onclick="toggleHobby(this)">Fajr</button>
+                    <button class="hobby-item" onclick="toggleHobby(this)">Dhuhr</button>
+                    <button class="hobby-item" onclick="toggleHobby(this)">Asr</button>
+                    <button class="hobby-item" onclick="toggleHobby(this)">Maghrib</button>
+                    <button class="hobby-item" onclick="toggleHobby(this)">Isha</button>
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="hobby-item" onclick="toggleHobby(this)">Reading Quran</button>
+                    <button class="hobby-item" onclick="toggleHobby(this)">Athkar</button>
+                    <button class="hobby-item" onclick="toggleHobby(this)">Doaa</button>
+                </div>
+            </div>
+
+            <!-- التواصل الاجتماعي -->
+            <div data-section="social" class="journal-section"
+                 style="background:var(--clr-social); border-color:var(--clr-social-b);">
+                <h4 class="section-title" style="color:var(--clr-social-t);">👥 Today I enjoyed my time with...</h4>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="hobby-item" onclick="toggleHobby(this)">Friends</button>
+                    <button class="hobby-item" onclick="toggleHobby(this)">Family</button>
+                    <button class="hobby-item" onclick="toggleHobby(this)">Alone</button>
+                </div>
+                <div id="socialQualityBox" style="display:none; margin-top:14px;">
+                    <p style="font-size:0.85rem; font-weight:700; color:var(--clr-social-t); margin:0 0 8px 0;">
+                        💬 How did it feel?
+                    </p>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;" id="socialQualityBtns">
+                        <button class="hobby-item" data-quality="90" onclick="selectSocialQuality(this)">😄 Amazing!</button>
+                        <button class="hobby-item" data-quality="70" onclick="selectSocialQuality(this)">🙂 Good</button>
+                        <button class="hobby-item" data-quality="50" onclick="selectSocialQuality(this)">😐 Okay</button>
+                        <button class="hobby-item" data-quality="25" onclick="selectSocialQuality(this)">😕 Not great</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- الواجبات المدرسية -->
+            <div data-section="homework" class="journal-section"
+                 style="background:var(--clr-academic); border-color:var(--clr-academic-b);">
+                <h4 class="section-title" style="color:var(--clr-academic-t);">📚 I finished my homework in...</h4>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="hobby-item" onclick="toggleHobby(this)">Math</button>
+                    <button class="hobby-item" onclick="toggleHobby(this)">Arabic</button>
+                    <button class="hobby-item" onclick="toggleHobby(this)">Science</button>
+                    <button class="hobby-item" onclick="toggleHobby(this)">English</button>
+                </div>
+            </div>
+
+            <!-- المساعدة المنزلية -->
+            <div data-section="chores" id="choresSection" class="journal-section"
+                 style="background:#EDE7F6; border-color:#D1C4E9;">
+                <h4 class="section-title" style="color:#4527A0;">🏠 I helped my family with...</h4>
+                <div id="choresButtons" style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="hobby-item" onclick="toggleHobby(this)">Yes!</button>
+                    <button class="hobby-item" onclick="toggleHobby(this)">No</button>
+                </div>
+            </div>
+
+            <!-- التغذية والمياه -->
+            <div data-section="nutrition" class="journal-section"
+                 style="background:#F1F8E9; border-color:#DCEDC8;">
+                <h4 class="section-title" style="color:#33691E;">🍎 I fed my body with...</h4>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:15px;">
+                    <button class="hobby-item" onclick="toggleHobby(this)">Fruits</button>
+                    <button class="hobby-item" onclick="toggleHobby(this)">Veggies</button>
+                    <button class="hobby-item" onclick="toggleHobby(this)">Protein</button>
+                </div>
+                <p style="font-size:0.85rem; font-weight:bold; margin-bottom:8px; color: #33691E;">💧 Water glasses today:</p>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div class="badge-circle" data-glass="1" onclick="selectWaterGlasses(1)">1</div>
+                    <div class="badge-circle" data-glass="2" onclick="selectWaterGlasses(2)">2</div>
+                    <div class="badge-circle" data-glass="3" onclick="selectWaterGlasses(3)">3</div>
+                    <div class="badge-circle" data-glass="4" onclick="selectWaterGlasses(4)">4</div>
+                    <div class="badge-circle" data-glass="5" onclick="selectWaterGlasses(5)">5</div>
+                    <div class="badge-circle" data-glass="6" onclick="selectWaterGlasses(6)">6</div>
+                    <div class="badge-circle" data-glass="7" onclick="selectWaterGlasses(7)">7</div>
+                    <div class="badge-circle" data-glass="8" onclick="selectWaterGlasses(8)">8</div>
+                </div>
+            </div>
+
+            <!-- الرياضة والحركة -->
+            <div data-section="sports" class="journal-section"
+                 style="background:var(--clr-physical); border-color:var(--clr-physical-b);">
+                <h4 class="section-title" style="color:var(--clr-physical-t);">⚽ I moved my body with...</h4>
+                <div id="sportsButtons" style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="hobby-item" onclick="toggleHobby(this)">Yes!</button>
+                    <button class="hobby-item" onclick="toggleHobby(this)">A little bit</button>
+                    <button class="hobby-item" onclick="toggleHobby(this)">No</button>
+                </div>
+            </div>
+
+            <!-- المرونة النفسية -->
+            <div data-section="resilience" class="journal-section"
+                 style="background:var(--clr-resilience); border-color:var(--clr-resilience-b);">
+                <h4 class="section-title" style="color:var(--clr-resilience-t);">💪 How did you handle challenges today?</h4>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="hobby-item" onclick="toggleHobby(this)">Stayed calm</button>
+                    <button class="hobby-item" onclick="toggleHobby(this)">Asked for help</button>
+                    <button class="hobby-item" onclick="toggleHobby(this)">Tried again</button>
+                    <button class="hobby-item" onclick="toggleHobby(this)">Didn't give up</button>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="column-right">
+            
+            <!-- الأنشطة الترفيهية -->
+            <div data-section="fun" class="journal-section"
+                 style="background:#FFF3E0; border-color:#FFE0B2;">
+                <h4 class="section-title" style="color:#E65100;"> What fun things did you do today?</h4>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="hobby-item" onclick="toggleHobby(this)">Reading</button>
+                    <button class="hobby-item" onclick="toggleHobby(this)">Drawing</button>
+                    <button class="hobby-item" onclick="toggleHobby(this)">Gaming</button>
+                    <button class="hobby-item" onclick="toggleHobby(this)">Music</button>
+                </div>
+            </div>
+
+            <!-- تتبع الحالة المزاجية -->
+            <div data-section="mood" class="journal-section"
+                 style="background:var(--clr-emotional); border-color:var(--clr-emotional-b); height: auto;">
+                <h4 class="section-title" style="color:var(--clr-emotional-t);">🌈 Today I felt...</h4>
+                
+                <div class="mood-grid">
+                    <div class="mood-card" data-mood="Good" data-emoji="😊" onclick="selectMood(this)">
+                        <span class="mood-emoji">😊</span>
+                        <span class="mood-text">Good</span>
+                    </div>
+                    <div class="mood-card" data-mood="Happy" data-emoji="😄" onclick="selectMood(this)">
+                        <span class="mood-emoji">😄</span>
+                        <span class="mood-text">Happy</span>
+                    </div>
+                    <div class="mood-card" data-mood="Excited" data-emoji="🎉" onclick="selectMood(this)">
+                        <span class="mood-emoji">🎉</span>
+                        <span class="mood-text">Excited</span>
+                    </div>
+                    <div class="mood-card" data-mood="Proud" data-emoji="🌟" onclick="selectMood(this)">
+                        <span class="mood-emoji">🌟</span>
+                        <span class="mood-text">Proud</span>
+                    </div>
+                    <div class="mood-card" data-mood="Sad" data-emoji="😢" onclick="selectMood(this)">
+                        <span class="mood-emoji">😢</span>
+                        <span class="mood-text">Sad</span>
+                    </div>
+                    <div class="mood-card" data-mood="Lonely" data-emoji="🥺" onclick="selectMood(this)">
+                        <span class="mood-emoji">🥺</span>
+                        <span class="mood-text">Lonely</span>
+                    </div>
+                    <div class="mood-card" data-mood="Tired" data-emoji="😴" onclick="selectMood(this)">
+                        <span class="mood-emoji">😴</span>
+                        <span class="mood-text">Tired</span>
+                    </div>
+                    <div class="mood-card" data-mood="Overwhelmed" data-emoji="😰" onclick="selectMood(this)">
+                        <span class="mood-emoji">😰</span>
+                        <span class="mood-text">Overwhelmed</span>
+                    </div>
+                    <div class="mood-card" data-mood="Worried" data-emoji="😟" onclick="selectMood(this)">
+                        <span class="mood-emoji">😟</span>
+                        <span class="mood-text">Worried</span>
+                    </div>
+                    <div class="mood-card" data-mood="Scared" data-emoji="😨" onclick="selectMood(this)">
+                        <span class="mood-emoji">😨</span>
+                        <span class="mood-text">Scared</span>
+                    </div>
+                    <div class="mood-card" data-mood="Angry" data-emoji="😠" onclick="selectMood(this)">
+                        <span class="mood-emoji">😠</span>
+                        <span class="mood-text">Angry</span>
+                    </div>
+                    <div class="mood-card" data-mood="Jealous" data-emoji="😒" onclick="selectMood(this)">
+                        <span class="mood-emoji">😒</span>
+                        <span class="mood-text">Jealous</span>
+                    </div>
+                    <div class="mood-card" data-mood="Confused" data-emoji="😕" onclick="selectMood(this)">
+                        <span class="mood-emoji">😕</span>
+                        <span class="mood-text">Confused</span>
+                    </div>
+                    <div class="mood-card" data-mood="Hurt" data-emoji="💔" onclick="selectMood(this)">
+                        <span class="mood-emoji">💔</span>
+                        <span class="mood-text">Hurt</span>
+                    </div>
+                </div>
+
+                <div id="moodReasonContainer" style="display: none; margin-top: 25px; animation: popIn 0.3s ease;">
+                    <h5 id="moodReasonQuestion" style="color: var(--clr-emotional-t); margin: 0 0 10px 0; font-size: 14px;">Why do you feel this way?</h5>
+                    <textarea id="moodReasonText"
+                              style="width:100%; min-height:70px; border-radius:18px; border:2px solid var(--clr-emotional-b);
+                                     padding:12px; font-family:inherit; font-size:14px; resize:vertical;
+                                     background:#fff; box-sizing:border-box;"
+                              placeholder="The most thing that made me feel this way today was..."></textarea>
+                </div>
+            </div>
+
+            <!-- Log Duration -->
+            <div data-section="logduration" style="display:none;">
+                <input type="number" id="logDurationInput" value="0" />
+                <span id="logDurationLabel"></span>
+            </div>
+
+            <!-- Sleep tracking -->
+            <div data-section="sleep" class="journal-section"
+                 style="background:#E8EAF6; border-color:#C5CAE9;">
+                <h4 class="section-title" style="color:#283593;">😴 How many hours did you sleep last night?</h4>
+                <input type="number" id="sleepHoursInput" min="0" max="24" step="1"
+                       placeholder="e.g. 8"
+                       style="width:100%; border-radius:18px; border:2px solid #C5CAE9;
+                              padding:12px; font-family:inherit; font-size:14px;
+                              background:#fff; box-sizing:border-box;" />
+                <textarea id="sleepNoteText"
+                          style="width:100%; min-height:60px; margin-top:10px; border-radius:18px; border:2px solid #C5CAE9;
+                                 padding:12px; font-family:inherit; font-size:14px; resize:vertical;
+                                 background:#fff; box-sizing:border-box;"
+                          placeholder="Anything about your sleep? (optional)"></textarea>
+            </div>
+
+            <!-- Past illness tracking -->
+            <div data-section="illness" class="journal-section"
+                 style="background:#FFF3E0; border-color:#FFE0B2;">
+                <h4 class="section-title" style="color:#E65100;">🤒 Did you feel sick today?</h4>
+                <div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
+                    <button type="button" class="hobby-item" id="illnessNoBtn" onclick="setIllToday(false)" style="flex:1; min-width:100px;">✅ No, I'm fine</button>
+                    <button type="button" class="hobby-item" id="illnessYesBtn" onclick="setIllToday(true)" style="flex:1; min-width:100px;">🤒 Yes, I feel sick</button>
+                </div>
+                <div id="illnessDetails" style="display:none;">
+                    <select id="illnessTypeSelect" style="width:100%; border-radius:18px; border:2px solid #FFE0B2; padding:12px; font-family:inherit; font-size:14px; background:#fff; box-sizing:border-box; margin-bottom:10px;">
+                        <option value="">What kind of illness?</option>
+                        <option value="Cold">Cold / Runny nose</option>
+                        <option value="Fever">Fever</option>
+                        <option value="Headache">Headache</option>
+                        <option value="Stomach">Stomach ache</option>
+                        <option value="Allergy">Allergy</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <textarea id="illnessNoteText"
+                              style="width:100%; min-height:60px; border-radius:18px; border:2px solid #FFE0B2;
+                                     padding:12px; font-family:inherit; font-size:14px; resize:vertical;
+                                     background:#fff; box-sizing:border-box;"
+                              placeholder="Tell Leafy how you feel (optional)"></textarea>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div id="multiSaveBanner"></div>
+
+    <div style="position:fixed; bottom:25px; left:50%; transform:translateX(-50%); z-index:100;">
+        <button id="saveBtn" class="btn"
+                style="background:#FFD97D; border:none; padding:15px 60px; font-size:1.2rem;
+                       border-radius:30px; font-weight:bold;
+                       box-shadow:0 8px 24px rgba(0,0,0,0.15); cursor:pointer;"
+                onclick="saveJournalDay()">
+            🚀 Save My Day!
+        </button>
+    </div>
+
+<script>
+    let selectedMoodValue = "";
+    let selectedMoodEmoji = "";
+    let currentWaterCount = 0;
+    let _socialQualityScore = 0;
+    let _wasIllToday = false;
+
+    function setIllToday(yes) {
+        _wasIllToday = yes;
+        document.getElementById('illnessDetails').style.display = yes ? 'block' : 'none';
+        document.getElementById('illnessYesBtn').classList.toggle('selected', yes);
+        document.getElementById('illnessNoBtn').classList.toggle('selected', !yes);
+    }
+
+    function calculateMoodPct(moodLevel) {
+        const moodMap = {
+            'happy':      85,
+            'excited':     85,
+            'proud':       85,
+            'good':        75,
+            'lonely':      30,
+            'tired':       30,
+            'sad':         10,
+            'overwhelmed': 10,
+            'worried':     10,
+            'scared':      10,
+            'angry':       10,
+            'jealous':     10,
+            'confused':    10,
+            'hurt':        10,
+        };
+        if (!moodLevel) return 50;
+        const key = moodLevel.toLowerCase().trim();
+        return moodMap[key] ?? 50;
+    }
+
+    function selectSocialQuality(el) {
+        document.querySelectorAll('#socialQualityBtns .hobby-item').forEach(b => b.classList.remove('selected-hobby'));
+        el.classList.add('selected-hobby');
+        _socialQualityScore = parseInt(el.dataset.quality || '0', 10);
+    }
+
+    function toggleHobby(el) {
+        el.classList.toggle('selected-hobby');
+        const section = el.closest('[data-section="social"]');
+        if (section) {
+            const hasContact = Array.from(section.querySelectorAll('.hobby-item.selected-hobby'))
+                .some(b => b.textContent.trim() !== 'Alone');
+            const box = document.getElementById('socialQualityBox');
+            if (box) box.style.display = hasContact ? 'block' : 'none';
+            if (!hasContact) _socialQualityScore = 0;
+        }
+    }
+
+    function selectWaterGlasses(count) {
+        if (currentWaterCount === count) {
+            currentWaterCount = 0;
+        } else {
+            currentWaterCount = count;
+        }
+        document.querySelectorAll('.badge-circle').forEach(el => {
+            const glassNum = parseInt(el.getAttribute('data-glass'));
+            if (glassNum <= currentWaterCount) {
+                el.classList.add('badge-active');
+            } else {
+                el.classList.remove('badge-active');
+            }
+        });
+    }
+
+    function selectMood(card) {
+        document.querySelectorAll('.mood-card').forEach(c => c.classList.remove('selected-mood'));
+        card.classList.add('selected-mood');
+        selectedMoodValue = card.getAttribute('data-mood');
+        selectedMoodEmoji = card.getAttribute('data-emoji');
+
+        const reasonContainer = document.getElementById('moodReasonContainer');
+        const reasonQuestion  = document.getElementById('moodReasonQuestion');
+        
+        if (reasonContainer && reasonQuestion) {
+            reasonQuestion.textContent = `💭 Why do you feel ${selectedMoodValue}?`;
+            reasonContainer.style.display = 'block';
+            document.getElementById('moodReasonText').focus();
+        }
+    }
+
+    function showBannerMsg(message, isError) {
+        const b = document.getElementById('saveBanner');
+        if (!b) return;
+        b.textContent = message;
+        b.className   = isError ? 'error' : '';
+        b.style.display = 'block';
+        b.style.opacity = '1';
+        setTimeout(() => {
+            b.style.opacity = '0';
+            setTimeout(() => { b.style.display = 'none'; }, 400);
+        }, 3000);
+    }
+
+    function getSelectedItems(sectionAttr) {
+        const sec = document.querySelector(`[data-section="${sectionAttr}"]`);
+        if (!sec) return [];
+        return Array.from(sec.querySelectorAll('.hobby-item.selected-hobby'))
+                    .map(el => el.textContent.trim().replace(/\n\s+/g, ' '));
+    }
+
+    function getActiveWaterCount() {
+        return currentWaterCount;
+    }
+
+    function escapeHtml(str) {
+        const d = document.createElement('div');
+        d.appendChild(document.createTextNode(str || ''));
+        return d.innerHTML;
+    }
+
+    document.addEventListener('DOMContentLoaded', async function () {
+        if (typeof requireChildAuth === 'function' && !requireChildAuth('child_login.html')) return;
+        await loadParentManagement();
+        await loadTodayJournalData();
+    });
+
+    async function loadTodayJournalData() {
+        if (typeof childAuthFetch !== 'function') return;
+        try {
+            const res = await childAuthFetch('/Children/today-journal');
+            if (!res || res.status === 204) return;
+            if (!res.ok) return;
+            const entry = await res.json();
+            if (!entry) return;
+
+            // Spiritual
+            if (entry.spiritualActivities) {
+                const vals = entry.spiritualActivities.split(', ');
+                document.querySelectorAll('[data-section="spiritual"] .hobby-item').forEach(btn => {
+                    if (vals.includes(btn.textContent.trim())) btn.classList.add('selected-hobby');
+                });
+            }
+            
+            // Social
+            if (entry.socialTimeWith) {
+                const vals = entry.socialTimeWith.split(', ');
+                document.querySelectorAll('[data-section="social"] .hobby-item').forEach(btn => {
+                    if (vals.includes(btn.textContent.trim())) btn.classList.add('selected-hobby');
+                });
+                const hasContact = vals.some(v => v !== 'Alone');
+                const box = document.getElementById('socialQualityBox');
+                if (box && hasContact) box.style.display = 'block';
+            }
+            
+            // Homework
+            if (entry.completedSubjects) {
+                const vals = entry.completedSubjects.split(', ');
+                document.querySelectorAll('[data-section="homework"] .hobby-item').forEach(btn => {
+                    if (vals.includes(btn.textContent.trim())) btn.classList.add('selected-hobby');
+                });
+            }
+            
+            // Chores
+            if (entry.completedChores) {
+                const vals = entry.completedChores.split(', ');
+                document.querySelectorAll('[data-section="chores"] .hobby-item').forEach(btn => {
+                    if (vals.includes(btn.textContent.trim())) btn.classList.add('selected-hobby');
+                });
+            }
+            
+            // Nutrition
+            if (entry.nutritionItems) {
+                const vals = entry.nutritionItems.split(', ');
+                document.querySelectorAll('[data-section="nutrition"] .hobby-item').forEach(btn => {
+                    if (vals.includes(btn.textContent.trim())) btn.classList.add('selected-hobby');
+                });
+            }
+            
+            // Water
+            if (entry.waterGlasses) selectWaterGlasses(entry.waterGlasses);
+            
+            // Sports
+            if (entry.physicalActivity) {
+                const vals = entry.physicalActivity.split(', ');
+                document.querySelectorAll('[data-section="sports"] .hobby-item').forEach(btn => {
+                    if (vals.includes(btn.textContent.trim())) btn.classList.add('selected-hobby');
+                });
+            }
+            
+            // Fun
+            if (entry.funActivities) {
+                const vals = entry.funActivities.split(', ');
+                document.querySelectorAll('[data-section="fun"] .hobby-item').forEach(btn => {
+                    if (vals.includes(btn.textContent.trim())) btn.classList.add('selected-hobby');
+                });
+            }
+
+            // Resilience (Challenge Handling)
+            if (entry.challengeHandling) {
+                const vals = Array.isArray(entry.challengeHandling)
+                    ? entry.challengeHandling
+                    : entry.challengeHandling.split(', ');
+                document.querySelectorAll('[data-section="resilience"] .hobby-item').forEach(btn => {
+                    if (vals.includes(btn.textContent.trim())) btn.classList.add('selected-hobby');
+                });
+            }
+
+            // Social Quality Score
+            if (entry.socialQualityScore != null && entry.socialQualityScore > 0) {
+                _socialQualityScore = entry.socialQualityScore;
+                const qBtns = document.querySelectorAll('#socialQualityBtns .hobby-item');
+                const match = Array.from(qBtns).find(b => parseInt(b.dataset.quality || '0', 10) === entry.socialQualityScore);
+                if (match) selectSocialQuality(match);
+            }
+
+            // Mood
+            if (entry.moodLevel) {
+                const moodCard = document.querySelector(`.mood-card[data-mood="${entry.moodLevel}"]`);
+                if (moodCard) selectMood(moodCard);
+            }
+            if (entry.moodReason) {
+                const moodText = document.getElementById('moodReasonText');
+                if (moodText) moodText.value = entry.moodReason;
+            }
+            
+            if (entry.logDuration) {
+                const durInput = document.getElementById('logDurationInput');
+                if (durInput) {
+                    durInput.value = entry.logDuration;
+                    updateDurationLabel();
+                }
+            }
+
+            // Sleep
+            if (entry.sleepHours != null && entry.sleepHours > 0) {
+                const sh = document.getElementById('sleepHoursInput');
+                if (sh) sh.value = entry.sleepHours;
+            }
+            if (entry.sleepNote) {
+                const sn = document.getElementById('sleepNoteText');
+                if (sn) sn.value = entry.sleepNote;
+            }
+
+            if (entry.wasIllToday) {
+                setIllToday(true);
+                if (entry.illnessType) document.getElementById('illnessTypeSelect').value = entry.illnessType;
+                if (entry.illnessNote) document.getElementById('illnessNoteText').value = entry.illnessNote;
+            } else {
+                setIllToday(false);
+            }
+
+            const btn = document.getElementById('saveBtn');
+            if (btn) btn.textContent = ' Update My Day!';
+        } catch (e) {
+            console.warn('[journal] loadTodayJournalData failed:', e);
+        }
+    }
+
+    async function loadParentManagement() {
+        if (typeof childAuthFetch !== 'function') return;
+        try {
+            const res = await childAuthFetch('/Children/my-management');
+            if (!res || !res.ok) return;
+            const plan = await res.json();
+            if (!plan.hasParentPlan) return;
+
+            if (plan.subjects?.length) {
+                const hw = document.querySelector('[data-section="homework"] div');
+                if (hw) hw.innerHTML = plan.subjects.map(s =>
+                    `<button class="hobby-item" onclick="toggleHobby(this)">${escapeHtml(s)}</button>`
+                ).join('');
+            }
+            if (plan.sports?.length) {
+                const sp = document.getElementById('sportsButtons'); 
+                if (sp) sp.innerHTML = plan.sports.map(s =>
+                    `<button class="hobby-item" onclick="toggleHobby(this)">${escapeHtml(s)}</button>`
+                ).join('');
+            }
+            if (plan.chores?.length) {
+                const btns = document.getElementById('choresButtons');
+                if (btns) {
+                    btns.innerHTML = plan.chores.map(c =>
+                        `<button class="hobby-item" onclick="toggleHobby(this)">${escapeHtml(c)}</button>`
+                    ).join('');
+                }
+            }
+        } catch (e) { console.warn('Could not load parent management plan:', e); }
+    }
+
+    function showLevelUp(level, levelName) {
+        const text    = document.getElementById('levelUpText');
+        const overlay = document.getElementById('levelUpOverlay');
+        if (!overlay) return;
+        if (text) {
+            text.textContent = levelName
+                ? `🎉 You reached Level ${level} — ${levelName}! Amazing work!`
+                : `🎉 You reached Level ${level}! Amazing work!`;
+        }
+        overlay.classList.add('show');
+    }
+    
+    function closeLevelUp() {
+        const overlay = document.getElementById('levelUpOverlay');
+        if (overlay) overlay.classList.remove('show');
+        window.location.href = 'leafy.html';
+    }
+
+    function showBadgeToast(badge) {
+        const toast = document.createElement('div');
+        toast.className = 'badge-toast';
+        toast.innerHTML = `
+            <div class="toast-icon">${badge.iconUrl || '🏅'}</div>
+            <div class="toast-text">
+                <div class="toast-title">🏅 New Badge Unlocked!</div>
+                <div class="toast-name">${badge.name}</div>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        requestAnimationFrame(() => toast.classList.add('show'));
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 400);
+        }, 4000);
+    }
+
+    const _DURATION_KEY  = 'growia_journal_duration_today';
+    const _DATE_KEY      = 'growia_journal_duration_date';
+    let   _sessionStart  = Date.now();   // كانت const — اتغيرت عشان نقدر نصفرها بعد كل save
+
+    function _getTodayKey() {
+        const d = new Date();
+        return d.getFullYear() + '-' +
+               String(d.getMonth() + 1).padStart(2, '0') + '-' +
+               String(d.getDate()).padStart(2, '0');
+    }
+
+    function _getAccumulatedMinutes() {
+        const savedDate = localStorage.getItem(_DATE_KEY);
+        const today     = _getTodayKey();
+        if (savedDate !== today) return 0;
+        return parseInt(localStorage.getItem(_DURATION_KEY) || '0', 10);
+    }
+
+    function _saveAccumulatedMinutes(totalMinutes) {
+        localStorage.setItem(_DATE_KEY,     _getTodayKey());
+        localStorage.setItem(_DURATION_KEY, String(totalMinutes));
+        _sessionStart = Date.now();   // ✅ Fix: يبدأ عدّ جديد من آخر save بدل ما يفضل يعد من فتح الصفحة
+    }
+
+    function _getCurrentSessionMinutes() {
+        return Math.min(180, Math.round((Date.now() - _sessionStart) / 60000));
+    }
+
+    function getTotalDurationMinutes() {
+        const accumulated = _getAccumulatedMinutes();
+        const current     = _getCurrentSessionMinutes();
+        return Math.min(1440, accumulated + current);
+    }
+
+    function updateDurationLabel() {
+        const v = parseInt(document.getElementById('logDurationInput').value || '0', 10);
+        const lbl = document.getElementById('logDurationLabel');
+        if (lbl) lbl.textContent = v + ' minute' + (v !== 1 ? 's' : '');
+    }
+
+    function showMultiSaveBanner(isFirstSave) {
+        if (!isFirstSave) {
+            const banner = document.getElementById('multiSaveBanner');
+            if (banner) {
+                banner.style.display = 'block';
+                banner.textContent = ' Entry added! You can keep logging more activities today — each entry counts!';
+            }
+        }
+    }
+
+    async function saveJournalDay() {
+        const btn = document.getElementById('saveBtn');
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = '⏳ Saving…';
+        }
+
+        const sliderVal   = parseInt(document.getElementById('logDurationInput')?.value || '0', 10);
+        const logDuration = sliderVal > 0 ? sliderVal : getTotalDurationMinutes();
+
+        _saveAccumulatedMinutes(logDuration);
+
+        const sportsItems = getSelectedItems('sports');
+        const choresItems = getSelectedItems('chores');
+
+        const payload = {
+            SpiritualActivities: getSelectedItems('spiritual'),
+            PhysicalActivity:    sportsItems.join(', '),
+            WaterGlasses:       getActiveWaterCount(),
+            SocialTimeWith:      getSelectedItems('social').join(', '),
+            CompletedSubjects:   getSelectedItems('homework'),
+            MoodLevel:           selectedMoodValue,
+            MoodEmoji:           selectedMoodEmoji,
+            MoodReason:          document.getElementById('moodReasonText')?.value.trim() || '',
+            MoodPct:             calculateMoodPct(selectedMoodValue),
+            NutritionItems:      getSelectedItems('nutrition'),
+            HelpedFamily:        choresItems.length > 0 && !choresItems.includes('No'),
+            CompletedChores:     choresItems,
+            FunActivities:       getSelectedItems('fun'),
+            LogDuration:         logDuration,
+
+            // Sliders — الباكيند يحسبهم
+            StudyingPct:   0,
+            SpiritualPct:   0,
+            MovingPct:     0,
+            FoodPct:       0,
+            ChorsPct:      0,   // ✅ ChorsPct مش ChoresPct
+            HobbiesPct:    0,
+            SocialPct:     0,
+
+            // Phase 7
+            ChallengeHandling:  getSelectedItems('resilience'),
+            SocialQualityScore: _socialQualityScore,
+
+            // Sleep
+            SleepHours: (() => {
+                const v = document.getElementById('sleepHoursInput')?.value;
+                return (v !== undefined && v !== '') ? Math.max(0, Math.min(24, parseInt(v, 10))) : null;
+            })(),
+            SleepNote: document.getElementById('sleepNoteText')?.value.trim() || null,
+
+            WasIllToday: _wasIllToday,
+            IllnessType: _wasIllToday ? (document.getElementById('illnessTypeSelect')?.value || null) : null,
+            IllnessNote: _wasIllToday ? (document.getElementById('illnessNoteText')?.value.trim() || null) : null
+        };
+
+        if (typeof childAuthFetch !== 'function') {
+            console.log("Mock Submit Payload:", payload);
+            showBannerMsg('Your day has been saved!  (Mock)', false);
+            if (btn) { btn.disabled = false; btn.textContent = ' Save My Day!'; }
+            return;
+        }
+
+        try {
+            const res = await childAuthFetch('/Children/journal', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:   JSON.stringify(payload)
+            });
+            if (!res) return;
+
+            if (res.ok) {
+                const result = await res.json();
+                if (result.leveledUp) {
+                    showLevelUp(result.level, result.levelName);
+                } else {
+                    showMultiSaveBanner(result.isFirstSave !== false);
+                    showBannerMsg(result.message || 'Your day has been saved! ', false);
+                    if (result.isFirstSave !== false) {
+                        setTimeout(() => { window.location.href = 'leafy.html'; }, 1400);
+                    } else {
+                        setTimeout(() => {
+                            if (btn) { btn.disabled = false; btn.textContent = '➕ Add Another Entry'; }
+                        }, 1500);
+                    }
+                }
+
+                if (Array.isArray(result.newlyUnlockedBadges) && result.newlyUnlockedBadges.length > 0) {
+                    result.newlyUnlockedBadges.forEach((b, i) => {
+                        setTimeout(() => showBadgeToast(b), i * 900);
+                    });
+                }
+            } else {
+                const data = await res.json().catch(() => ({}));
+                showBannerMsg(data.message || 'Could not save. Please try again.', true);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = ' Save My Day!';
+                }
+            }
+        } catch (e) {
+            showBannerMsg('Connection error. Is the server running?', true);
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = ' Save My Day!';
+            }
+        }
+    }
+</script>
+</body>
+</html>

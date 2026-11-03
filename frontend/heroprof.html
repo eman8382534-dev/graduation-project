@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leafy - Hero Profile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- script.js MUST come before chart.js so API_BASE_URL and auth helpers
+         are available to the inline scripts below -->
+    <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+     :root {
+            --bg-page: #ffffff;
+            --main-pink: #ff8a80;
+            --light-pink: #ffa499;
+            --accent-yellow: #f5c211;
+            --text-dark: #2d4a43;
+            --card-bg: #ffffff;
+            --border-color: #edf2f7;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-dark);
+            padding-bottom: 50px;
+        }
+
+        /* --- Header --- */
+        .hero-header {
+            background-color: var(--main-pink);
+            color: white;
+            padding: 40px 20px;
+            border-radius: 0 0 40px 40px;
+            box-shadow: 0 4px 15px rgba(255, 138, 128, 0.15);
+        }
+
+        .max-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .back-home-btn {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .back-home-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .profile-card-top {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .avatar-box {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            background-color: white;
+            border: 4px solid var(--accent-yellow);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 45px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.05);
+        }
+
+        .level-badge {
+            position: absolute;
+            bottom: -4px;
+            right: 0px;
+            background-color: var(--accent-yellow);
+            color: white;
+            font-weight: 700;
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 12px;
+            border: 2px solid white;
+        }
+
+        /* Badge row: inline SVG icons need explicit sizing */
+        #hp-badge-row svg { width: 20px; height: 20px; display: block; }
+
+        .profile-info h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .status-line {
+            color: var(--accent-yellow);
+            font-weight: 700;
+            font-size: 15px;
+            margin-top: 4px;
+        }
+
+        .archetype-text {
+            font-size: 13px;
+            color: #ffebee;
+            margin-top: 4px;
+        }
+
+        /* --- Dashboard Grid --- */
+        .dashboard-grid {
+            max-width: 1200px;
+            margin: 30px auto 0 auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 968px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .main-column, .side-column {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        /* --- Cards --- */
+        .dashboard-card {
+            background-color: var(--card-bg);
+            border-radius: 32px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+            border: 1px solid #edf4ee;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-desc {
+            font-size: 12px;
+            color: #8fa0a2;
+            margin-bottom: 20px;
+            margin-top: 2px;
+        }
+
+        /* --- Power Orbs --- */
+        .orb-grid, .orbs-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 968px) {
+            .orb-grid, .orbs-row { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .orb-card, .orb-item {
+            background: var(--card-bg);
+            border: 1px solid #e2e8f0;
+            padding: 30px 20px;
+            border-radius: 24px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .orb-icon-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 1.8rem;
+            background-color: #f0f7fa;
+        }
+
+        .orb-label {
+            font-size: 12px;
+            font-weight: 800;
+            color: #1e293b;
+            text-transform: uppercase;
+        }
+
+        .orb-percent {
+            font-size: 24px;
+            font-weight: 700;
+            color: #475569;
+            margin: 5px 0;
+        }
+
+        .orb-status-tag {
+            font-size: 11px;
+            background-color: #fef3c7;
+            color: #d97706;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-weight: 700;
+            margin-top: 5px;
+        }
+
+        /* --- Quest Map --- */
+        .quests-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        @media (max-width: 680px) {
+            .quests-grid { grid-template-columns: 1fr; }
+        }
+
+        .quest-item, .quest-box {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 24px;
+            margin-bottom: 15px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+        }
+
+        .quest-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .quest-emoji { font-size: 24px; }
+        .quest-title-text { font-size: 14px; font-weight: 700; color: var(--text-dark); }
+        .quest-days-count { font-size: 11px; color: #8fa0a2; }
+
+        .day-dots, .days-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .dot, .day-btn {
+            width: 30px;
+            height: 30px;
+            background: #f1f5f9;
+            border-radius: 50%;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #e2e8f0;
+            font-size: 11px;
+            color: #94a3b8;
+            font-weight: 700;
+            transition: all 0.2s ease;
+        }
+
+        .dot.active-dot, .dot.completed, .day-btn.completed {
+            background: var(--accent-yellow) !important;
+            border-color: #eab308 !important;
+            color: white !important;
+            transform: scale(1.1);
+            box-shadow: 0 4px 10px rgba(245, 194, 17, 0.3);
+        }
+
+        /* --- Reward Vault --- */
+        .vault-item-wrapper {
+            background-color: #f8faf8;
+            border: 1px solid #edf2ed;
+            border-radius: 20px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .vault-item-title {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 700;
+            color: #7a8c87;
+            margin-bottom: 10px;
+        }
+
+        .slots-grid { display: grid; gap: 8px; }
+        .slots-3 { grid-template-columns: repeat(3, 1fr); }
+        .slots-2 { grid-template-columns: repeat(2, 1fr); }
+
+        .empty-slot {
+            height: 60px;
+            background-color: white;
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+        }
+
+        .empty-slot-large {
+            height: 75px;
+            background-color: white;
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+        }
+
+        .honest-points-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f8faf8;
+            border: 1px solid #edf2ed;
+            padding: 12px 15px;
+            border-radius: 16px;
+        }
+
+        .honest-title { font-size: 11px; font-weight: 700; color: #7a8c87; }
+        .honest-badge-score {
+            font-size: 13px;
+            font-weight: 700;
+            background-color: #ffebee;
+            color: var(--main-pink);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        /* --- Chart & Leafy Tip --- */
+        .chart-container {
+            width: 100%;
+            height: 240px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .leafy-tip-box {
+            background-color: #ffebee;
+            border: 1px solid #ffcdd2;
+            border-radius: 28px;
+            padding: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: start;
+        }
+
+        .leafy-avatar { font-size: 32px; }
+        .tip-content h4 { font-size: 14px; font-weight: 700; color: var(--main-pink); margin-bottom: 2px; }
+        .tip-content p { font-size: 12px; color: #5c3838; line-height: 1.5; }
+        .tip-signature { font-size: 10px; font-weight: 700; color: var(--main-pink); display: block; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+    <header class="hero-header">
+        <div class="max-container">
+            <a href="leafy.html" class="back-home-btn">
+                <i class="fas fa-arrow-left"></i> Back to Home
+            </a>
+
+            <div class="profile-card-top">
+                <div class="avatar-box">
+                    <span id="heroAvatarEmoji">🌱</span>
+                    <!-- FIX: was hardcoded "LV 5" — now populated by API -->
+                    <span class="level-badge" id="levelDisplay">LV …</span>
+                </div>
+                <div class="profile-info">
+                    <span class="subtitle-hq">SUPERPOWER HQ</span>
+                    <!-- FIX: was hardcoded "Heba's Hero Profile" — now populated by API -->
+                    <h1 id="heroName">Loading…</h1>
+                    <!-- FIX: was hardcoded "Level 5 – Budding Explorer" — now bound to API level -->
+                    <div class="status-line" id="statusLine">
+                        <i class="fas fa-wand-magic-sparkles"></i> <span id="levelLabel">Level … – Hero</span>
+                    </div>
+                    <!-- FIX: was fully hardcoded "The Gentle Light – A soul filled with compassion and faith"
+                         Now computed dynamically by computeArchetype() from script.js -->
+                    <div class="archetype-text">
+                        Archetype: <span class="archetype-highlight" id="archetypeLabel">…</span>
+                        – <span id="archetypeDesc">…</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="dashboard-grid">
+
+        <main class="main-column">
+
+            <section class="dashboard-card">
+                <div class="card-title">
+                    <i class="fas fa-bolt" style="color: #10b981;"></i> Power Orbs
+                </div>
+                <div class="card-desc">Your 5 magical energies – collect them all!</div>
+
+                <!-- FIX: all orb percentages start at "0%" (correct placeholder);
+                     they are overwritten by API data in loadHeroProfile() below -->
+                <div class="orbs-row">
+                    <div class="orb-item">
+                        <div class="orb-icon-circle">🕌</div>
+                        <span class="orb-label">Spiritual</span>
+                        <span class="orb-percent" id="pct-spiritual">0%</span>
+                        <span class="orb-status-tag">Needs juice</span>
+                    </div>
+                    <div class="orb-item">
+                        <div class="orb-icon-circle">💛</div>
+                        <span class="orb-label">Kindness</span>
+                        <span class="orb-percent" id="pct-kindness">0%</span>
+                        <span class="orb-status-tag">Needs juice</span>
+                    </div>
+                    <div class="orb-item">
+                        <div class="orb-icon-circle">📚</div>
+                        <span class="orb-label">Curiosity</span>
+                        <span class="orb-percent" id="pct-curiosity">0%</span>
+                        <span class="orb-status-tag">Needs juice</span>
+                    </div>
+                    <div class="orb-item">
+                        <div class="orb-icon-circle">⚽</div>
+                        <span class="orb-label">Vitality</span>
+                        <span class="orb-percent" id="pct-vitality">0%</span>
+                        <span class="orb-status-tag">Needs juice</span>
+                    </div>
+                    <div class="orb-item">
+                        <div class="orb-icon-circle">🌈</div>
+                        <span class="orb-label">Resilience</span>
+                        <span class="orb-percent" id="pct-resilience">0%</span>
+                        <span class="orb-status-tag">Needs juice</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="dashboard-card">
+                <div class="card-title">
+                    <i class="fas fa-trophy" style="color: #ffcb42;"></i> Quest Map
+                </div>
+                <div class="card-desc">Tap a day to mark it – watch the stars pop!</div>
+
+                <div class="quests-grid">
+                    <div class="quest-box" data-quest="spiritual">
+                        <div class="quest-meta">
+                            <span class="quest-emoji">🕌</span>
+                            <div>
+                                <div class="quest-title-text">Connect with Allah</div>
+                                <div class="quest-days-count"><span class="count-num">0</span>/7 days</div>
+                            </div>
+                        </div>
+                        <div class="days-row">
+                            <button class="day-btn" onclick="toggleDay(this, 'spiritual', 0)">M</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'spiritual', 1)">T</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'spiritual', 2)">W</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'spiritual', 3)">T</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'spiritual', 4)">F</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'spiritual', 5)">S</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'spiritual', 6)">S</button>
+                        </div>
+                    </div>
+
+                    <div class="quest-box" data-quest="kindness">
+                        <div class="quest-meta">
+                            <span class="quest-emoji">👨‍👩‍👧‍👦</span>
+                            <div>
+                                <div class="quest-title-text">Help Family & Kindness</div>
+                                <div class="quest-days-count"><span class="count-num">0</span>/7 days</div>
+                            </div>
+                        </div>
+                        <div class="days-row">
+                            <button class="day-btn" onclick="toggleDay(this, 'kindness', 0)">M</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'kindness', 1)">T</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'kindness', 2)">W</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'kindness', 3)">T</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'kindness', 4)">F</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'kindness', 5)">S</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'kindness', 6)">S</button>
+                        </div>
+                    </div>
+
+                    <div class="quest-box" data-quest="curiosity">
+                        <div class="quest-meta">
+                            <span class="quest-emoji">📚</span>
+                            <div>
+                                <div class="quest-title-text">Complete Homework</div>
+                                <div class="quest-days-count"><span class="count-num">0</span>/7 days</div>
+                            </div>
+                        </div>
+                        <div class="days-row">
+                            <button class="day-btn" onclick="toggleDay(this, 'curiosity', 0)">M</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'curiosity', 1)">T</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'curiosity', 2)">W</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'curiosity', 3)">T</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'curiosity', 4)">F</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'curiosity', 5)">S</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'curiosity', 6)">S</button>
+                        </div>
+                    </div>
+
+                    <div class="quest-box" data-quest="vitality">
+                        <div class="quest-meta">
+                            <span class="quest-emoji">🏃‍♂️</span>
+                            <div>
+                                <div class="quest-title-text">Move Your Body</div>
+                                <div class="quest-days-count"><span class="count-num">0</span>/7 days</div>
+                            </div>
+                        </div>
+                        <div class="days-row">
+                            <button class="day-btn" onclick="toggleDay(this, 'vitality', 0)">M</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'vitality', 1)">T</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'vitality', 2)">W</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'vitality', 3)">T</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'vitality', 4)">F</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'vitality', 5)">S</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'vitality', 6)">S</button>
+                        </div>
+                    </div>
+
+                    <div class="quest-box" data-quest="resilience">
+                        <div class="quest-meta">
+                            <span class="quest-emoji">🥗</span>
+                            <div>
+                                <div class="quest-title-text">Eat Healthy Food</div>
+                                <div class="quest-days-count"><span class="count-num">0</span>/7 days</div>
+                            </div>
+                        </div>
+                        <div class="days-row">
+                            <button class="day-btn" onclick="toggleDay(this, 'resilience', 0)">M</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'resilience', 1)">T</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'resilience', 2)">W</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'resilience', 3)">T</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'resilience', 4)">F</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'resilience', 5)">S</button>
+                            <button class="day-btn" onclick="toggleDay(this, 'resilience', 6)">S</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <aside class="side-column">
+
+            <!-- ── Level Journey Progress ── -->
+            <section class="dashboard-card" style="margin-bottom:20px;">
+                <div class="card-title">🗺️ My Journey</div>
+                <div class="card-desc">Level up by journaling every day!</div>
+
+                <!-- Level tag + EXP bar -->
+                <div style="display:flex; align-items:center; gap:10px; margin:12px 0 6px;">
+                    <span id="hp-lv-tag" style="background:#FFD97D; color:#7a5000; font-weight:700;
+                          font-size:0.9rem; padding:3px 14px; border-radius:20px; white-space:nowrap;">
+                        Lv. …
+                    </span>
+                    <div style="flex:1; background:#f0f0f0; border-radius:10px; height:10px; overflow:hidden;">
+                        <div id="hp-exp-fill" style="height:100%; background:linear-gradient(90deg,#FFD97D,#FF8A8A);
+                             border-radius:10px; width:0%; transition:width 0.8s ease;"></div>
+                    </div>
+                    <span id="hp-exp-label" style="font-size:0.72rem; color:#888; white-space:nowrap;">0%</span>
+                </div>
+                <div id="hp-next-hint" style="font-size:0.78rem; color:#4DB6AC; font-weight:600; margin-bottom:12px;"></div>
+
+                <!-- Mini milestone row -->
+                <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:4px; margin-bottom:8px;">
+                    <!-- 6 milestones (PHASE 10: one per DB Level) -->
+                    <div id="hp-milestones" style="display:flex; gap:4px; width:100%; justify-content:space-between;">
+                        <!-- populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Badge earned per level -->
+                <div style="margin-top:10px;">
+                    <div style="font-size:0.75rem; font-weight:700; color:#aaa; text-transform:uppercase;
+                                letter-spacing:0.5px; margin-bottom:6px;">Badges unlocked</div>
+                    <div id="hp-badge-row" style="display:flex; gap:6px; flex-wrap:wrap;">
+                        <!-- populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Trust score inline display -->
+                <div id="hp-trust-row" style="display:none; align-items:center; justify-content:space-between;
+                     background:#f8faf8; border:1px solid #edf2ed; border-radius:14px;
+                     padding:10px 14px; margin-top:10px; font-size:.78rem;">
+                    <span style="font-weight:700; color:#7a8c87;">Trust Score</span>
+                    <span id="trustScoreDisplay" style="font-weight:700; font-size:.9rem; color:#10b981; background:#e6f4f0;
+                          padding:3px 12px; border-radius:20px;">–</span>
+                </div>
+
+                <div style="display:flex; gap:8px; margin-top:12px;">
+                    <a href="journey.html" style="flex:1; text-align:center; font-size:0.8rem;
+                       font-weight:700; color:#4DB6AC; text-decoration:none; padding:8px;
+                       background:#f0faf9; border-radius:12px;">
+                        Full journey →
+                    </a>
+                    <a href="badges.html" style="flex:1; text-align:center; font-size:0.8rem;
+                       font-weight:700; color:#FF8A8A; text-decoration:none; padding:8px;
+                       background:#fff0f3; border-radius:12px;">
+                        All badges →
+                    </a>
+                </div>
+            </section>
+
+            <section class="dashboard-card">
+                <div class="card-title">🏅 My Pillar Badges</div>
+                <div class="card-desc">Earn badges by growing each pillar in your daily journal</div>
+
+                <!-- Suggestion banner (weakest pillar) -->
+                <div id="hp-badge-tip" style="
+                    display:none; margin:10px 0 14px;
+                    background:linear-gradient(135deg,#fff8dc,#fff3e0);
+                    border-radius:12px; padding:10px 14px;
+                    font-size:.78rem; color:#7a5000; font-weight:600;
+                    border-left:3px solid #FFD97D; line-height:1.5;
+                "></div>
+
+                <!-- 8 pillar badges grid (2 rows × 4 cols) -->
+                <div id="hp-pillar-grid" style="
+                    display:grid; grid-template-columns:repeat(4,1fr);
+                    gap:10px; margin-top:4px;
+                ">
+                    <div style="height:76px;background:#f5f5f5;border-radius:14px;"></div>
+                    <div style="height:76px;background:#f5f5f5;border-radius:14px;"></div>
+                    <div style="height:76px;background:#f5f5f5;border-radius:14px;"></div>
+                    <div style="height:76px;background:#f5f5f5;border-radius:14px;"></div>
+                    <div style="height:76px;background:#f5f5f5;border-radius:14px;"></div>
+                    <div style="height:76px;background:#f5f5f5;border-radius:14px;"></div>
+                    <div style="height:76px;background:#f5f5f5;border-radius:14px;"></div>
+                    <div style="height:76px;background:#f5f5f5;border-radius:14px;"></div>
+                </div>
+            </section>
+
+
+            <section class="dashboard-card">
+                <div class="card-title">❄️ Superpower Web</div>
+                <div class="card-desc">Your full personality at a glance</div>
+
+                <div class="chart-container">
+                    <canvas id="superpowerChart"></canvas>
+                </div>
+            </section>
+
+            <div class="leafy-tip-box">
+                <div class="leafy-avatar">🌱</div>
+                <div class="tip-content">
+                    <h4>Leafy's Tip</h4>
+                    <p id="tipText">Loading your tip…</p>
+                    <span class="tip-signature">— Leafy 🌵</span>
+                </div>
+            </div>
+
+        </aside>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         LOCAL STATE + CHART LOGIC  (unchanged from original)
+         Quest-map toggles still persist to localStorage so offline
+         interactions are not lost; API data merges on top at load.
+    ═══════════════════════════════════════════════════════════ -->
+    <script>
+        let heroState = {
+            orbs: { spiritual: 0, kindness: 0, curiosity: 0, vitality: 0, resilience: 0 },
+            quests: {
+                spiritual:  [false, false, false, false, false, false, false],
+                kindness:   [false, false, false, false, false, false, false],
+                curiosity:  [false, false, false, false, false, false, false],
+                vitality:   [false, false, false, false, false, false, false],
+                resilience: [false, false, false, false, false, false, false]
+            }
+        };
+
+        let myRadarChart;
+        const daysLetters = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+        window.onload = function () {
+            initChart();
+            renderUI();
+            // Load weekly quest data from API
+            loadWeeklyQuests();
+        };
+
+        async function loadWeeklyQuests() {
+            if (typeof childAuthFetch !== 'function') return;
+            try {
+                const res = await childAuthFetch('/Children/weekly-quests');
+                if (!res || !res.ok) return;
+                const data = await res.json();
+                if (!data.quests) return;
+
+                // Populate heroState.quests from API data
+                ['spiritual','kindness','curiosity','vitality','resilience'].forEach(key => {
+                    if (data.quests[key]) {
+                        heroState.quests[key] = data.quests[key];
+                    }
+                });
+
+                renderUI();
+                updateChart();
+            } catch (e) {
+                console.warn('[heroprof] weekly-quests load failed:', e);
+            }
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('superpowerChart').getContext('2d');
+            myRadarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Spiritual 🕋', 'Kindness 💛', 'Curiosity 📚', 'Vitality ⚽', 'Resilience 🌈'],
+                    datasets: [{
+                        label: 'Hero Power',
+                        data: [
+                            heroState.orbs.spiritual,
+                            heroState.orbs.kindness,
+                            heroState.orbs.curiosity,
+                            heroState.orbs.vitality,
+                            heroState.orbs.resilience
+                        ],
+                        backgroundColor: 'rgba(52, 211, 153, 0.35)',
+                        borderColor: '#10b981',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#15614d',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#10b981'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: '#e2e8f0' },
+                            grid: { color: '#e2e8f0' },
+                            pointLabels: {
+                                font: { family: 'Fredoka', size: 11, weight: 'bold' },
+                                color: '#2d4a43'
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 100,
+                            ticks: { display: false }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function toggleDay(button, questKey, dayIndex) {
+            // Quest Map is read-only — driven by journal entries saved via the app.
+            // Tapping shows a friendly reminder instead of toggling manually.
+            const tip = document.getElementById('tipText');
+            if (tip) {
+                tip.textContent = "Complete today's journal to light up your stars! 🌟";
+                setTimeout(() => loadWeeklyQuests(), 200); // re-render from API
+            }
+        }
+
+        // BUG FIX (Phase 14 Audit): new — calls the new PATCH
+        // /api/Rewards/{id}/redeem endpoint added to RewardsController.
+        // Must be a global function (not nested inside the loadHeroProfile
+        // IIFE below) since it's invoked from an inline onclick= attribute
+        // on dynamically-rendered reward buttons.
+        async function redeemReward(rewardId) {
+            try {
+                const res = await childAuthFetch(`/Rewards/${rewardId}/redeem`, { method: 'PATCH' });
+                if (!res) return; // 401/403 already handled by childAuthFetch
+
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    alert(data.message || 'Reward redeemed! 🎉');
+                } else {
+                    alert(data.message || 'Could not redeem this reward.');
+                }
+            } catch (e) {
+                console.warn('Redeem reward error:', e);
+                alert('Something went wrong redeeming this reward. Please try again.');
+            } finally {
+                // Re-render the reward slots either way, so a stale "already
+                // redeemed" button doesn't stay clickable after a failed retry.
+                if (typeof window.refreshRewardSlots === 'function') {
+                    window.refreshRewardSlots();
+                }
+            }
+        }
+
+        function renderUI() {
+            // Orb percentages & status tags
+            for (const key in heroState.orbs) {
+                const percent = heroState.orbs[key];
+                const pctEl = document.getElementById(`pct-${key}`);
+                if (!pctEl) continue;
+                pctEl.textContent = percent + '%';
+
+                const statusTag = pctEl.nextElementSibling;
+                if (!statusTag) continue;
+                if (percent === 100) {
+                    statusTag.textContent = 'Max Power! 🚀';
+                    statusTag.style.backgroundColor = '#e6f4f0';
+                    statusTag.style.color = '#10b981';
+                } else if (percent > 40) {
+                    statusTag.textContent = 'Growing... 🌱';
+                    statusTag.style.backgroundColor = '#e0f2fe';
+                    statusTag.style.color = '#0284c7';
+                } else {
+                    statusTag.textContent = 'Needs juice';
+                    statusTag.style.backgroundColor = '#fff3d1';
+                    statusTag.style.color = '#b28200';
+                }
+            }
+
+            // Quest-map day buttons
+            for (const questKey in heroState.quests) {
+                const questBox = document.querySelector(`.quest-box[data-quest="${questKey}"]`);
+                if (!questBox) continue;
+                const buttons     = questBox.querySelectorAll('.day-btn');
+                const countDisplay = questBox.querySelector('.count-num');
+
+                let doneCount = 0;
+                heroState.quests[questKey].forEach((isDone, index) => {
+                    if (isDone) {
+                        buttons[index].className  = 'day-btn completed';
+                        buttons[index].textContent = '⭐';
+                        doneCount++;
+                    } else {
+                        buttons[index].className  = 'day-btn';
+                        buttons[index].textContent = daysLetters[index];
+                    }
+                });
+                if (countDisplay) countDisplay.textContent = doneCount;
+            }
+
+            // Leafy tip — points to the weakest orb
+            let minOrb = 'resilience';
+            let minVal  = 101;
+            for (const key in heroState.orbs) {
+                if (heroState.orbs[key] < minVal) {
+                    minVal = heroState.orbs[key];
+                    minOrb = key;
+                }
+            }
+            const tipText = document.getElementById('tipText');
+            if (tipText) {
+                if (minVal === 100) {
+                    tipText.textContent = 'Wow! You are an Ultimate Super Hero today! All your energies are fully charged! Keep shining! 🌟✨';
+                } else {
+                    const tips = {
+                        spiritual:  'Your Spiritual orb is ready for more light! Take a quiet moment to pray or say something thankful to Allah. 🕌',
+                        kindness:   "Let's spread some smiles! Help mom, hug a sibling, or say a kind word to someone to power up your Kindness energy! 💛",
+                        curiosity:  'Your brain is a super muscle! Read a couple of pages or finish your school quest to supercharge your Curiosity! 📚',
+                        vitality:   'Time to move, hero! Do 10 jumps, run around, or stretch your muscles to get your Vitality buzzing! ⚽🏃‍♂️',
+                        resilience: 'A true hero never gives up! Eat your healthy veggies or try solving a tricky puzzle to maximise your Resilience! 🥗💪'
+                    };
+                    tipText.textContent = tips[minOrb];
+                }
+            }
+        }
+
+        function updateChart() {
+            if (myRadarChart) {
+                myRadarChart.data.datasets[0].data = [
+                    heroState.orbs.spiritual,
+                    heroState.orbs.kindness,
+                    heroState.orbs.curiosity,
+                    heroState.orbs.vitality,
+                    heroState.orbs.resilience
+                ];
+                myRadarChart.update();
+            }
+        }
+    </script>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         API INTEGRATION  — fully rewritten for Group 2 fixes:
+         • FIX (Auth)    : uses childAuthFetch() from script.js —
+                           no more bare fetch() + manual token header.
+         • FIX (401)     : childAuthFetch() calls clearChildToken()
+                           (not localStorage.removeItem('token')).
+         • FIX (Archetype): hardcoded string replaced by
+                            computeArchetype(profile) from script.js.
+         • FIX (Level)   : status line dynamically shows API level.
+         • FIX (TrustScore): honest-points badge bound to profile data.
+         • FIX (Badges)  : badge grid and counter populated from API.
+         • FIX (Stats)   : calls new GET /api/Children/stats endpoint
+                           to show totalLogs / streak in the vault area.
+    ═══════════════════════════════════════════════════════════ -->
+    <script>
+
+    /**
+     * renderIcon(iconUrl, fallback)
+     * All badge iconUrl values from the API are inline SVG strings.
+     * Injecting them via innerHTML renders them as vector graphics.
+     * Falls back to emoji when iconUrl is absent.
+     */
+    function renderIcon(iconUrl, fallback = '🏅') {
+        if (!iconUrl) return fallback;
+        const s = iconUrl.trim();
+        if (s.startsWith('<svg')) return s;
+        if (s.startsWith('http') || s.startsWith('data:'))
+            return `<img src="${s.replace(/"/g,'&quot;')}" width="28" height="28" alt="" style="display:block;margin:0 auto;" loading="lazy">`;
+        return s;
+    }
+
+    (async function loadHeroProfile() {
+
+        // Auth guard — childAuthFetch() will handle redirect on 401/403
+        if (!getChildToken()) {
+            window.location.href = 'child_login.html';
+            return;
+        }
+
+        /* ── 1. Profile ─────────────────────────────────────── */
+        try {
+            const res = await childAuthFetch('/Children/profile');
+            if (!res || !res.ok) return;
+            const profile = await res.json();
+
+            // Hero name
+            const nameEl = document.getElementById('heroName');
+            if (nameEl) nameEl.textContent = (profile.fullName || 'Hero') + "'s Hero Profile";
+
+            // FIX: show the chosen emoji avatar (characterType) in the avatar-box.
+            // Falls back to 🌱 if no avatar saved yet.
+            const avatarEl = document.getElementById('heroAvatarEmoji');
+            if (avatarEl) avatarEl.textContent = profile.characterType || '🌱';
+
+            // Level badge + status line
+            const level = profile.level || 1;
+            const lvEl  = document.getElementById('levelDisplay');
+            if (lvEl) lvEl.textContent = 'LV ' + level;
+
+            const levelLabel = document.getElementById('levelLabel');
+            if (levelLabel) {
+                // Level name comes from profile.levelName if set, else fallback to seeded DB names.
+                // Journey-progress call below will update this with the authoritative DB-driven name.
+                const DB_LEVEL_NAMES = {1:'The Sprout',2:'Week One Hero',3:'Kindness Bloom',4:'Sunshine Star',5:'Champion',6:'Grawiaa Legend'};
+                const rank = profile.levelName || DB_LEVEL_NAMES[level] || `Hero Level ${level}`;
+                levelLabel.textContent = `Level ${level} – ${rank}`;
+            }
+
+            // FIX: dynamic archetype — computed from API percentages
+            const archetype = computeArchetype(profile);  // from script.js
+            const archetypeLabelEl = document.getElementById('archetypeLabel');
+            const archetypeDescEl  = document.getElementById('archetypeDesc');
+            if (archetypeLabelEl) archetypeLabelEl.textContent = archetype.label;
+            if (archetypeDescEl)  archetypeDescEl.textContent  = archetype.description;
+
+            // Merge API percentages into heroState
+            // Use Core Trait values as source of truth (computed by TraitSynthesisEngine).
+            // ?? 0 fallback for new children who haven't saved a journal yet —
+            // avoids raw-pillar fallback which is on a different scale and causes
+            // a visible "drop" the next time traits are computed.
+            heroState.orbs.spiritual  = profile.spiritualTrait  ?? 0;
+            heroState.orbs.kindness   = profile.kindnessTrait   ?? 0;
+            heroState.orbs.curiosity  = profile.curiosityTrait  ?? 0;
+            heroState.orbs.vitality   = profile.vitalityTrait   ?? 0;
+            heroState.orbs.resilience = profile.resilienceTrait ?? 0;
+
+            // FIX: honest-points badge = trustScore from API (out of 100)
+            const trustEl  = document.getElementById('trustScoreDisplay');
+            const trustRow  = document.getElementById('hp-trust-row');
+            if (trustEl && profile.trustScore != null) {
+                const ts = profile.trustScore;
+                trustEl.textContent = `${ts}%`;
+                trustEl.style.color = ts >= 70 ? '#10b981' : ts >= 40 ? '#f59e0b' : '#ef4444';
+                trustEl.style.background = ts >= 70 ? '#e6f4f0' : ts >= 40 ? '#fef9e7' : '#fef2f2';
+                if (trustRow) trustRow.style.display = 'flex';
+            }
+
+            renderUI();
+            updateChart();
+
+        } catch (e) {
+            console.error('Profile API error:', e);
+        }
+
+        /* ── 2. Pillar Badges ─────────────────────────────── */
+        /* FIX (Phase 14): /Children/pillar-badges was removed (MetricType
+           "pillar_pct" challenges don't exist in seeded data → always empty).
+           Now reads FinalXxx_Pct from /Children/pillar-detail instead.
+           Tier thresholds unchanged: 0-29=Locked, 30-59=Bronze, 60-84=Silver, 85+=Gold. */
+        try {
+            const pbRes = await childAuthFetch('/Children/pillar-detail');
+            if (pbRes && pbRes.ok) {
+                const pbData = await pbRes.json();
+                const finalPillars = pbData.final || {};
+
+                const PILLAR_META = [
+                    { key: 'academic',        label: 'Academic',   icon: '📚', color: '#42A5F5' },
+                    { key: 'social',          label: 'Social',     icon: '🤝', color: '#66BB6A' },
+                    { key: 'mental',          label: 'Mental',     icon: '🧠', color: '#AB47BC' },
+                    { key: 'physicalHealth',  label: 'Physical',   icon: '💪', color: '#FF7043' },
+                    { key: 'spiritual',       label: 'Spiritual',  icon: '🕋', color: '#26C6DA' },
+                    { key: 'environmental',   label: 'Home',       icon: '🏡', color: '#8D6E63' },
+                    { key: 'creativity',      label: 'Creativity', icon: '🎨', color: '#FFCA28' },
+                    { key: 'physicalActivity',label: 'Activity',   icon: '⚡', color: '#EC407A' },
+                ];
+
+                const TIER_MEDAL_HP  = ['', '🥉', '🥈', '🥇'];
+                const TIER_LABEL_HP  = ['Not yet', 'Bronze', 'Silver', 'Gold'];
+                const TIER_SHADOW_HP = ['#bbb', '#a0522d', '#999', '#c49a00'];
+
+                const grid = document.getElementById('hp-pillar-grid');
+                if (grid) {
+                    grid.innerHTML = PILLAR_META.map(meta => {
+                        const pct    = Math.min(100, Math.round(finalPillars[meta.key] || 0));
+                        const tier   = pct >= 85 ? 3 : pct >= 60 ? 2 : pct >= 30 ? 1 : 0;
+                        const locked = tier === 0;
+                        const bg     = locked ? '#e8e8e8' : meta.color;
+                        const shadow = TIER_SHADOW_HP[tier];
+
+                        const prevTgt = tier === 0 ? 0 : tier === 1 ? 30 : tier === 2 ? 60 : 85;
+                        const nextTgt = tier === 0 ? 30 : tier === 1 ? 60 : tier === 2 ? 85 : 100;
+                        const ringPct = tier >= 3 ? 100
+                            : Math.min(100, Math.round((pct - prevTgt) / (nextTgt - prevTgt) * 100));
+
+                        return `
+                        <div style="
+                            background:#fff; border-radius:14px;
+                            padding:8px 6px; text-align:center;
+                            box-shadow:0 2px 8px rgba(0,0,0,.07);
+                            opacity:${locked ? 0.5 : 1};
+                            transition:transform .2s;
+                            cursor:default;
+                        " title="${meta.label}: ${pct}% (${TIER_LABEL_HP[tier]})">
+                            <div style="
+                                width:44px;height:44px;border-radius:50%;
+                                background:conic-gradient(
+                                    ${tier >= 3 ? '#FFD700' : bg} ${ringPct * 3.6}deg,
+                                    #f0f0f0 0deg
+                                );
+                                margin:0 auto 5px;
+                                display:flex;align-items:center;justify-content:center;
+                                box-shadow:0 3px 0 ${shadow};
+                                filter:${locked ? 'grayscale(1)' : 'none'};
+                                position:relative;
+                            ">
+                                <div style="
+                                    width:32px;height:32px;border-radius:50%;
+                                    background:${locked ? '#ddd' : bg};
+                                    display:flex;align-items:center;justify-content:center;
+                                    font-size:1.05rem;
+                                ">${meta.icon}</div>
+                                ${tier === 3 ? '<div style="position:absolute;top:-8px;font-size:.6rem;">👑</div>' : ''}
+                            </div>
+                            <div style="font-size:.62rem;font-weight:700;color:#555;line-height:1.2;">
+                                ${meta.label}
+                            </div>
+                            <div style="font-size:.6rem;color:${tier > 0 ? '#888' : '#bbb'};">
+                                ${TIER_MEDAL_HP[tier] || '🔒'} ${TIER_LABEL_HP[tier]}
+                            </div>
+                            <div style="
+                                background:#f0f0f0;border-radius:4px;
+                                height:4px;margin-top:4px;overflow:hidden;
+                            ">
+                                <div style="
+                                    height:100%;border-radius:4px;
+                                    width:${ringPct}%;
+                                    background:${tier >= 3 ? '#FFD700' : bg};
+                                    transition:width .5s;
+                                "></div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                }
+            }
+        } catch(e) {
+            console.warn('Pillar badges error (non-critical):', e);
+        }
+
+        /* ── 2b. Level Journey mini-card (PHASE 10) ───────────────────── */
+        try {
+            const jRes = await childAuthFetch('/Children/journey-progress');
+            if (jRes && jRes.ok) {
+                const jd = await jRes.json();
+                const backendLv     = jd.currentLevel        || 1;
+                const levelName     = jd.currentLevelName    || 'The Sprout';
+                const expPct        = jd.progressPercentage  || 0;
+                const requirements  = Array.isArray(jd.nextLevelRequirements) ? jd.nextLevelRequirements : [];
+                const levelDefs     = Array.isArray(jd.levelDefinitions) ? jd.levelDefinitions : [];
+
+                // Level tag — now shows DB-driven name
+                const lvTag = document.getElementById('hp-lv-tag');
+                if (lvTag) lvTag.textContent = `Lv. ${backendLv} – ${levelName}`;
+
+                // EXP fill bar
+                const expFill = document.getElementById('hp-exp-fill');
+                if (expFill) expFill.style.width = expPct + '%';
+
+                // EXP label
+                const expLabel = document.getElementById('hp-exp-label');
+                if (expLabel) expLabel.textContent = expPct + '%';
+
+                // Next hint — first incomplete challenge text for the active level
+                const nextChallenge = requirements.find(r => !r.completed);
+                const hintEl = document.getElementById('hp-next-hint');
+                if (hintEl) {
+                    hintEl.textContent = nextChallenge
+                        ? `${nextChallenge.emoji || '🎯'} ${nextChallenge.text}`
+                        : (backendLv >= 6 ? '🌟 You are a Grawiaa Legend!' : 'All challenges done — keep journaling!');
+                }
+
+                // Mini milestones row — 6 circles, one per DB level
+                const miRow = document.getElementById('hp-milestones');
+                if (miRow) {
+                    miRow.innerHTML = levelDefs.map((lv) => {
+                        const isDone   = lv.isDone;
+                        const isActive = lv.isActive;
+                        const bg = isDone || isActive ? '#FFD97D' : '#e8e8e8';
+                        const textCol = isDone || isActive ? '#7a5000' : '#bbb';
+                        const shadow  = isActive
+                            ? '0 0 0 3px #fff8dc, 0 3px 0 #d48806'
+                            : isDone ? '0 3px 0 #d48806' : '0 3px 0 #ccc';
+                        return `
+                        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;">
+                            <div style="width:36px;height:36px;border-radius:50%;
+                                        background:${bg};color:${textCol};
+                                        display:flex;align-items:center;justify-content:center;
+                                        font-size:1rem;font-weight:700;
+                                        box-shadow:${shadow};
+                                        filter:${isDone||isActive?'none':'grayscale(1)'};
+                                        opacity:${isDone||isActive?1:0.5};">
+                                ${isDone ? '✓' : isActive ? lv.emoji : '🔒'}
+                            </div>
+                            <span style="font-size:0.6rem;font-weight:700;
+                                         color:${isDone?'#388E3C':isActive?'#e6536f':'#bbb'};
+                                         text-align:center;line-height:1.1;">
+                                ${lv.name}
+                            </span>
+                        </div>`;
+                    }).join('');
+                }
+
+                // Badge row — REAL unlocked badges from the challenge-based engine.
+                // GET /Children/my-badges returns a FLAT array of
+                // { name, description, iconUrl, unlockedAt } — no nested .badge object.
+                try {
+                    const bRes = await childAuthFetch('/Children/my-badges');
+                    if (bRes && bRes.ok) {
+                        const myBadges = await bRes.json();
+                        const badgeRowEl = document.getElementById('hp-badge-row');
+                        if (badgeRowEl) {
+                            if (!Array.isArray(myBadges) || myBadges.length === 0) {
+                                badgeRowEl.innerHTML = `<div style="font-size:.75rem;color:#bbb;">No badges yet — keep journaling! 🌱</div>`;
+                            } else {
+                                // Show most recent 6 badges
+                                const recent = myBadges
+                                    .slice()
+                                    .sort((a,b) => new Date(b.unlockedAt) - new Date(a.unlockedAt))
+                                    .slice(0, 6);
+                                badgeRowEl.innerHTML = recent.map(b => `
+                                    <div title="✅ ${b.name || 'Badge'}${b.description ? ' — ' + b.description : ''}"
+                                         style="width:34px;height:34px;border-radius:50%;
+                                                background:#FFD97D;
+                                                display:flex;align-items:center;justify-content:center;
+                                                font-size:1.1rem;cursor:default;
+                                                box-shadow:0 2px 6px rgba(0,0,0,0.12);">
+                                        ${renderIcon(b.iconUrl, '🏅')}
+                                    </div>`).join('');
+                            }
+                        }
+                    }
+                } catch (be) {
+                    console.warn('my-badges fetch error:', be);
+                }
+            }
+        } catch (e) {
+            console.warn('Journey progress error (non-critical):', e);
+        }
+
+        /* ── 3. Stats (new endpoint) ────────────────────────── */
+        try {
+            const statsRes = await childAuthFetch('/Children/stats');
+            if (!statsRes || !statsRes.ok) return;
+            const stats = await statsRes.json();
+
+            // Use streak and totalLogs as supplementary info in the vault desc
+            const desc = document.querySelector('.dashboard-card .card-desc');
+            if (desc && stats.currentStreak > 0) {
+                desc.textContent = `🔥 ${stats.currentStreak}-day streak · ${stats.totalLogs} logs total`;
+            }
+
+        } catch (e) {
+            // Non-critical — silently ignore if stats endpoint unavailable
+            console.warn('Stats API error (non-critical):', e);
+        }
+
+        /* ── 4. Rewards (Golden Petals) ─────────────────────── */
+        // FIX: Load child rewards from /api/Rewards/my-rewards and render
+        // in the "GOLDEN PETALS" vault section. Previously was static 0/2 hardcode.
+        //
+        // BUG FIX (Phase 14 Audit): rewards were previously display-only —
+        // IsRedeemed could never become true anywhere in the app (backend
+        // had no redeem endpoint at all). Each active reward slot is now a
+        // button that calls the global redeemReward() (defined in the
+        // earlier <script> block alongside toggleDay/renderUI, since it
+        // must be reachable from this inline onclick=) which PATCHes
+        // /api/Rewards/{id}/redeem and then re-runs this same block via
+        // window.refreshRewardSlots() so the redeemed reward drops out of
+        // the active (!isRedeemed) filter immediately.
+        window.refreshRewardSlots = async function refreshRewardSlots() {
+            try {
+                const rewardsRes = await childAuthFetch('/Rewards/my-rewards');
+                if (rewardsRes && rewardsRes.ok) {
+                    const rewards = await rewardsRes.json();
+                    const slotsEl   = document.getElementById('rewardSlotsGrid');
+                    const counterEl = document.getElementById('rewardCountLabel');
+
+                    if (slotsEl) {
+                        const active  = rewards.filter(r => r.parentApproved && !r.isRedeemed);
+                        const count   = active.length;
+                        const shown   = active.slice(0, 3);
+                        const empty   = Math.max(0, 2 - shown.length);
+
+                        slotsEl.innerHTML =
+                            shown.map(r =>
+                                `<button onclick="redeemReward(${r.id})"
+                                         style="min-height:54px;background:#fffbe6;border:none;border-radius:12px;
+                                                padding:8px 10px;display:flex;flex-direction:column;
+                                                justify-content:center;cursor:pointer;width:100%;text-align:left;"
+                                         title="Tap to redeem: ${r.title}">
+                                    <span style="font-size:11px;font-weight:800;color:#856404;">${r.title}</span>
+                                    <span style="font-size:11px;color:#a07800;">${r.cost} pts · tap to redeem</span>
+                                 </button>`
+                            ).join('') +
+                            '<div class="empty-slot-large"></div>'.repeat(empty);
+
+                        if (counterEl) counterEl.textContent = `${Math.min(count, 3)}/3`;
+                    }
+                }
+            } catch (e) {
+                console.warn('Rewards API error (non-critical):', e);
+            }
+        };
+        await window.refreshRewardSlots();
+
+        /* ── 5. Leafy Tip (from API) ───────────────────────────── */
+        // FIX: previously tipText was only ever set by renderUI() from local
+        // heroState (localStorage-based orb values).  Now we load the tip from
+        // Phase 13 fix: call /Children/leafy-recommendation (AI-aware) first.
+        // That endpoint already falls back internally to the backend smart-tip
+        // when the AI hasn't delivered a recommendation yet, so one call covers
+        // both cases. The legacy /Children/leafy-tip random endpoint is only
+        // used as a last-resort network/auth fallback — same pattern as leafy.html.
+        try {
+            const tipRes = await childAuthFetch('/Children/leafy-recommendation');
+            if (tipRes && tipRes.ok) {
+                const tipData = await tipRes.json();
+                const tipEl = document.getElementById('tipText');
+                if (tipEl && tipData.tip) tipEl.textContent = tipData.tip;
+                return;
+            }
+        } catch (e) {
+            console.warn('Leafy recommendation API error (non-critical):', e);
+        }
+        // Fallback: smart-tip
+        try {
+            const smartRes = await childAuthFetch('/Children/smart-tip');
+            if (smartRes && smartRes.ok) {
+                const smartData = await smartRes.json();
+                const tipEl = document.getElementById('tipText');
+                if (tipEl && smartData.tip) tipEl.textContent = smartData.tip;
+                return;
+            }
+        } catch (e) {
+            console.warn('Smart-tip API error (non-critical):', e);
+        }
+        // Last-resort fallback: legacy random tip
+        try {
+            const legacyRes = await childAuthFetch('/Children/leafy-tip');
+            if (legacyRes && legacyRes.ok) {
+                const legacyData = await legacyRes.json();
+                const tipEl = document.getElementById('tipText');
+                if (tipEl && legacyData.tip) tipEl.textContent = legacyData.tip;
+            }
+        } catch (e) {
+            console.warn('Leafy tip fallback API error (non-critical):', e);
+        }
+
+    })();
+    </script>
+
+</body>
+</html>
